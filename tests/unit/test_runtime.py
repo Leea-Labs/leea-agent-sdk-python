@@ -6,6 +6,7 @@ import pytest
 import leea_agent_sdk.runtime as rt
 from leea_agent_sdk import protocol
 from leea_agent_sdk.protocol.protocol_pb2 import ServerHello, AgentHello, ExecutionRequest, ExecutionResult
+from leea_agent_sdk.transport import Transport
 from tests.unit.stubs import SummarizerAgent, DummyTransport, SummarizerAgentInput, SummarizerAgentOutput
 from tests.unit.stubs import NoMessagesError
 
@@ -88,3 +89,10 @@ def test_events():
         asyncio.run(rt.astart(SummarizerAgent(), transport))
 
     assert len(transport.sent) == 3
+
+
+def test_transport():
+    transport: Transport = Transport()
+    asyncio.run(transport.send(protocol.pack(
+        ExecutionRequest(RequestID="1", AgentID="1", Input=SummarizerAgentInput(a=1, b=1, create_event=True).model_dump_json())
+    )))
