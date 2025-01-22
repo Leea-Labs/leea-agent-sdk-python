@@ -47,8 +47,6 @@ def agent_registry_contract(w3) -> str:
         "./contracts/contracts/artifacts/aregistry/AgentRegistry.bin", "r"
     ) as bin_file:
         bin = bin_file.read()
-
-    w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
     w3.eth.default_account = w3.eth.accounts[0]
     registry = w3.eth.contract(abi=abi, bytecode=bin)
     tx_hash = registry.constructor(
@@ -71,6 +69,9 @@ def test_register_agent_local(agent_registry_contract, w3):
     w3.eth.wait_for_transaction_receipt(tx_hash)
     ok = inst.register(agent_registry_contract, 100, "GPT")
     assert ok is True
+    # try to register again
+    ok = inst.register(agent_registry_contract, 100, "GPT")
+    assert ok is False
 
 
 # def test_register_agent_Holesky():
