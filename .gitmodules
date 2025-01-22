@@ -3,4 +3,4 @@
 	url = https://github.com/Leea-Labs/leea-contracts.git
 [submodule "protocol"]
 	path = protocol
-	url = https://github.com/Leea-Labs/leea-agent-protocol
+	url = https://github.com/Leea-Labs/leea-agent-protocol.git
