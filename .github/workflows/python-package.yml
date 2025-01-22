@@ -32,6 +32,9 @@ jobs:
     - name: Lint with flake8
       run: |
         flake8 .
+    - name: Run hardhat
+      run: |
+        npm install --save-dev hardhat && npx hardhat node  
     - name: Test with pytest
       run: |
         pytest
