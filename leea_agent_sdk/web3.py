@@ -62,6 +62,36 @@ class Web3Instance:
             return False
 
     def register(self, contract_address: str, fee: int, name: str) -> bool:
+        contract_instance: Contract = self.get_contract(contract_address)
+        registered: bool = contract_instance.functions.isAgent(
+            self.account.address
+        ).call()
+        if registered is True:
+            logger.exception("Agent address already registered")
+            return False
+        gas = self.get_gas(self.account.address, fee, name)
+        balance = self.w3.eth.get_balance(self.account.address)
+        if balance < gas:
+            logger.exception(
+                f"Agent balance is less than gas required, please top up by {gas - balance}"
+            )
+            return False
+        tx_hash = contract_instance.functions.registerAgent(
+            self.account.address, fee, name
+        ).transact()
+        self.w3.eth.wait_for_transaction_receipt(tx_hash)
+        txn_receipt = self.w3.eth.get_transaction_receipt(tx_hash)
+        logger.info(f"Transaction receipt {txn_receipt}")
+        return True
+
+    def get_gas(self, contract_address: str, fee: int, name: str) -> int:
+        contract_instance: Contract = self.get_contract(contract_address)
+        gas = contract_instance.functions.registerAgent(
+            self.account.address, fee, name
+        ).estimate_gas()
+        return gas
+
+    def get_contract(self, contract_address: str) -> Contract:
         with open(
             "contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
         ) as abi_file:
@@ -69,28 +99,4 @@ class Web3Instance:
             contract_instance: Contract = self.w3.eth.contract(
                 address=contract_address, abi=abi
             )
-            registered: bool = contract_instance.functions.isAgent(
-                self.account.address
-            ).call()
-            if registered is True:
-                logger.exception("Agent address already registered")
-                return False
-            gas = contract_instance.functions.registerAgent(
-                self.account.address, fee, name
-            ).estimate_gas()
-            balance = self.w3.eth.get_balance(self.account.address)
-            if balance < gas:
-                logger.exception(
-                    f"Agent balance is less than gas required, please top up by {gas - balance}"
-                )
-                return False
-            unsent_tx = contract_instance.functions.registerAgent(
-                self.account.address, fee, name
-            ).build_transaction({"from": self.account.address,"nonce": self.w3.eth.get_transaction_count(self.account.address)})
-            signed_tx = self.w3.eth.account.sign_transaction(unsent_tx, private_key=self.account.key)
-            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-            self.w3.eth.wait_for_transaction_receipt(tx_hash)
-            logger.info(f"Transaction hash {signed_tx}")
-            txn_receipt = self.w3.eth.get_transaction_receipt(tx_hash)
-            logger.info(f"Transaction receipt {txn_receipt}")
-            return True
+            return contract_instance

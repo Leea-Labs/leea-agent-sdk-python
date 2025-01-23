@@ -38,7 +38,7 @@ def w3(tester_provider):
 
 
 @pytest.fixture
-def agent_registry_contract(w3) -> str:
+def agent_registry_contract_address(w3) -> str:
     with open(
         "./contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
     ) as abi_file:
@@ -56,21 +56,29 @@ def agent_registry_contract(w3) -> str:
     return tx_receipt.contractAddress
 
 
-def test_register_agent_local(agent_registry_contract, w3):
+def test_register_agent_local(agent_registry_contract_address, w3):
     connected: bool = inst.connect("http://127.0.0.1:8545")
     assert connected is True
+    fee = 100
+    name = "GPT"
     tx_hash = w3.eth.send_transaction(
         {
             "from": w3.eth.accounts[0],
             "to": inst.account.address,
-            "value": 296971437658458,
+            "value": inst.get_gas(
+                contract_address=agent_registry_contract_address, fee=fee, name=name
+            ),
         }
     )
     w3.eth.wait_for_transaction_receipt(tx_hash)
-    ok = inst.register(agent_registry_contract, 100, "GPT")
+    ok = inst.register(
+        contract_address=agent_registry_contract_address, fee=fee, name=name
+    )
     assert ok is True
     # try to register again
-    ok = inst.register(agent_registry_contract, 100, "GPT")
+    ok = inst.register(
+        contract_address=agent_registry_contract_address, fee=fee, name=name
+    )
     assert ok is False
 
 
