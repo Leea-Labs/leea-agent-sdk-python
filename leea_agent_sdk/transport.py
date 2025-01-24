@@ -6,6 +6,8 @@ from os import getenv
 from websockets.exceptions import ConnectionClosedError
 from websockets.asyncio.client import connect
 from websockets.protocol import State
+from google.protobuf import message as _message
+import leea_agent_sdk.protocol as protocol
 
 from leea_agent_sdk.logger import logger
 
@@ -71,12 +73,14 @@ class Transport:
         return self._connection
 
     @reconnect_if_closed
-    async def send(self, msg: bytes):
-        await (await self._get_connection()).send(msg)
+    async def send(self, msg: _message.Message):
+        packed = protocol.pack(msg)
+        await (await self._get_connection()).send(packed)
         logger.debug(f"-> {msg}")
 
     @reconnect_if_closed
-    async def receive(self) -> bytes:
+    async def receive(self) -> _message.Message:
         recv = await (await self._get_connection()).recv()
-        logger.debug(f"<- {recv}")
-        return recv
+        msg = protocol.unpack(recv)
+        logger.debug(f"<- {msg}")
+        return msg
