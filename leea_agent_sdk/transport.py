@@ -106,7 +106,9 @@ class Transport:
     def _unpack(self, data: bytes) -> _message.Message:
         envelope = Envelope()
         envelope.ParseFromString(data)
-        assert self._wallet.verify_message(envelope.Payload, envelope.Signature), "Message signature is not valid"
+        signature_valid = self._wallet.verify_message(envelope.Payload, envelope.Signature)
+        if not signature_valid:
+            logger.warning("Message signature is not valid") # TODO raise exception when server side is implemented
 
         message_type = Envelope.MessageType.Name(envelope.Type)
         message_type = DESCRIPTOR.message_types_by_name[message_type]
