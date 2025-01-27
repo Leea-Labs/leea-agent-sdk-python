@@ -6,6 +6,7 @@ inst = Web3InstanceEVM("leea_acc.json", "12345678")
 
 
 def test_create_wallet():
+    inst.create_wallet()
     assert inst.account.address is not None, "address cant be empty"
 
 
