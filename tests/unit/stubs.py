@@ -1,3 +1,4 @@
+import os
 import asyncio
 from typing import Type
 
@@ -25,7 +26,9 @@ class SummarizerAgent(Agent):
     input_schema: Type[BaseModel] = SummarizerAgentInput
     output_schema: Type[BaseModel] = SummarizerAgentOutput
 
-    async def run(self, request_id: str, input: SummarizerAgentInput) -> SummarizerAgentOutput:
+    async def run(
+        self, request_id: str, input: SummarizerAgentInput
+    ) -> SummarizerAgentOutput:
         if input.slow_motion > 0:
             await asyncio.sleep(input.slow_motion)
         if input.create_event:
@@ -39,6 +42,8 @@ class NoMessagesError(Exception):
 
 class DummyTransport(Transport):
     def __init__(self, to_receive=[]):
+        os.environ["LEEA_WALLET_PATH"] = "tests/unit/fixtures/id.json"
+        super().__init__("API_KEY")
         self.to_receive = to_receive
         self.sent = []
         self.connected = []
