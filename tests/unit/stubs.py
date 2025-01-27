@@ -39,6 +39,7 @@ class NoMessagesError(Exception):
 
 class DummyTransport(Transport):
     def __init__(self, to_receive=[]):
+        super().__init__("API_KEY")
         self.to_receive = to_receive
         self.sent = []
         self.connected = []

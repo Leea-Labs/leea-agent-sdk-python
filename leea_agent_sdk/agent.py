@@ -3,7 +3,6 @@ from typing import Type
 
 from pydantic import BaseModel
 
-from leea_agent_sdk import protocol
 from leea_agent_sdk.protocol.protocol_pb2 import ExecutionLog
 from leea_agent_sdk.transport import Transport
 
@@ -25,4 +24,4 @@ class Agent(BaseModel, ABC):
         """Here goes the actual implementation of the agent."""
 
     async def push_log(self, request_id: str, message: str):
-        await self._transport.send(protocol.pack(ExecutionLog(RequestID=request_id, Message=message)))
+        await self._transport.send(ExecutionLog(RequestID=request_id, Message=message))
