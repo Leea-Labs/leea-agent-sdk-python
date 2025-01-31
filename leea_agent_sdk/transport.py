@@ -23,11 +23,11 @@ class Transport:
 
     def __init__(self, api_key=None, wallet_path=None):
         self._connect_uri = (
-            f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:1211')}/api/v1/connect"
+            f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:1211')}/agents"
         )
         self._api_key = api_key or getenv("LEEA_API_KEY")
         self._wallet = Web3InstanceSolana(
-            wallet_path or getenv("LEEA_WALLET_PATH", f"{getcwd()}/wallet.json")
+            wallet_path or getenv("LEEA_WALLET_PATH")
         )
         if not self._api_key:
             raise RuntimeError("Please provide LEEA_API_KEY")
