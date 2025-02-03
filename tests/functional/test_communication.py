@@ -7,7 +7,6 @@ from typing import Type
 
 import pytest
 
-from leea_agent_sdk.transport import Transport
 from pydantic import BaseModel, Field
 
 from leea_agent_sdk.agent import Agent
@@ -63,7 +62,7 @@ def _start_agent(agent, wallet_path):
     if agent.name == 'ping':
         time.sleep(1)
     print(f"Starting {agent.name}")
-    start(agent, Transport(wallet_path=wallet_path))
+    start(agent, wallet_path=wallet_path)
     print(f"Started {agent.name}")
 
 
