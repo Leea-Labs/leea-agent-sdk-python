@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling", "hatch-requirements-txt"]
+build-backend = "hatchling.build"
+
+[project]
+name = "leea_agent_sdk"
+version = "0.0.1"
+description = ""
+readme = "README.md"
+requires-python = ">=3.9"
+authors = []
+dynamic = ["dependencies"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
