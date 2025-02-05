@@ -21,7 +21,7 @@ class Transport:
 
     def __init__(self, api_key=None):
         self._connect_uri = (
-            f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:1211')}/agents"
+            f"{getenv('LEEA_API_WS_HOST', 'wss://api.leealabs.com')}/ws-agents"
         )
         print(self._connect_uri)
         self._api_key = api_key or getenv("LEEA_API_KEY")
