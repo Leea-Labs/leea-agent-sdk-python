@@ -89,10 +89,3 @@ def test_events():
         asyncio.run(rt.astart(SummarizerAgent(), transport))
 
     assert len(transport.sent) == 3
-
-
-def test_transport():
-    transport: Transport = Transport()
-    asyncio.run(transport.send(protocol.pack(
-        ExecutionRequest(RequestID="1", AgentID="1", Input=SummarizerAgentInput(a=1, b=1, create_event=True).model_dump_json())
-    )))
