@@ -12,9 +12,9 @@ def test_sign_verify():
     inst.create_wallet()
     sig: str = inst.sign_message("Hello World")
     ver: bool = inst.verify_message("Hello World", sig)
-    assert ver == True
+    assert ver is True
 
 
 def test_connect():
     connected: bool = inst.connect("https://sepolia.base.org")
-    assert connected == True
+    assert connected is True
