@@ -52,22 +52,26 @@ class Error(_message.Message):
     def __init__(self, RequestID: _Optional[str] = ..., Message: _Optional[str] = ...) -> None: ...
 
 class ExecutionRequest(_message.Message):
-    __slots__ = ("RequestID", "AgentID", "Input")
+    __slots__ = ("RequestID", "AgentID", "Input", "Signature")
     REQUESTID_FIELD_NUMBER: _ClassVar[int]
     AGENTID_FIELD_NUMBER: _ClassVar[int]
     INPUT_FIELD_NUMBER: _ClassVar[int]
+    SIGNATURE_FIELD_NUMBER: _ClassVar[int]
     RequestID: str
     AgentID: str
     Input: str
-    def __init__(self, RequestID: _Optional[str] = ..., AgentID: _Optional[str] = ..., Input: _Optional[str] = ...) -> None: ...
+    Signature: str
+    def __init__(self, RequestID: _Optional[str] = ..., AgentID: _Optional[str] = ..., Input: _Optional[str] = ..., Signature: _Optional[str] = ...) -> None: ...
 
 class ExecutionStep(_message.Message):
-    __slots__ = ("RequestID", "Message")
+    __slots__ = ("RequestID", "Message", "Signature")
     REQUESTID_FIELD_NUMBER: _ClassVar[int]
     MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    SIGNATURE_FIELD_NUMBER: _ClassVar[int]
     RequestID: str
     Message: str
-    def __init__(self, RequestID: _Optional[str] = ..., Message: _Optional[str] = ...) -> None: ...
+    Signature: str
+    def __init__(self, RequestID: _Optional[str] = ..., Message: _Optional[str] = ..., Signature: _Optional[str] = ...) -> None: ...
 
 class ExecutionResult(_message.Message):
     __slots__ = ("RequestID", "IsSuccessful", "Result")
