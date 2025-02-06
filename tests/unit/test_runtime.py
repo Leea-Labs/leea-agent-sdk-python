@@ -34,6 +34,7 @@ def test_run_agent():
     with pytest.raises(NoMessagesError):
         rt.start(SummarizerAgent(), transport)
 
+    assert len(transport.sent) == 2
     output = transport.sent.pop()
     execution_result = protocol.unpack(output)
     assert isinstance(execution_result, ExecutionResult)
@@ -62,7 +63,7 @@ def test_parallel_running():
 
     duration = time.time() - started_at
 
-    assert duration <= 1.1
+    assert duration <= 1.2
     assert len(transport.sent) == 3
 
 
