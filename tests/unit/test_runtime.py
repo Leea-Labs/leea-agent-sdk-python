@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 import pytest
@@ -62,4 +63,28 @@ def test_parallel_running():
     duration = time.time() - started_at
 
     assert duration <= 1.1
+    assert len(transport.sent) == 3
+
+
+def test_astart():
+    transport: DummyTransport = DummyTransport()
+    transport.to_receive.append(protocol.pack(ServerHello()))
+    transport.to_receive.append(protocol.pack(
+        ExecutionRequest(RequestID="1", AgentID="1", Input=SummarizerAgentInput(a=1, b=1).model_dump_json())
+    ))
+    with pytest.raises(NoMessagesError):
+        asyncio.run(rt.astart(SummarizerAgent(), transport))
+
+    assert len(transport.sent) == 2
+
+
+def test_events():
+    transport: DummyTransport = DummyTransport()
+    transport.to_receive.append(protocol.pack(ServerHello()))
+    transport.to_receive.append(protocol.pack(
+        ExecutionRequest(RequestID="1", AgentID="1", Input=SummarizerAgentInput(a=1, b=1, create_event=True).model_dump_json())
+    ))
+    with pytest.raises(NoMessagesError):
+        asyncio.run(rt.astart(SummarizerAgent(), transport))
+
     assert len(transport.sent) == 3
