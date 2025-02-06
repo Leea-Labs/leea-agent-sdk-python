@@ -3,6 +3,8 @@ from typing import Type
 
 from pydantic import BaseModel
 
+from leea_agent_sdk import protocol
+from leea_agent_sdk.protocol.protocol_pb2 import ExecutionStep
 from leea_agent_sdk.transport import Transport
 
 
@@ -19,8 +21,8 @@ class Agent(BaseModel, ABC):
         self._transport = transport
 
     @abstractmethod
-    async def run(self, data: BaseModel):
+    async def run(self, request_id: str, data: BaseModel):
         """Here goes the actual implementation of the agent."""
 
-    def push_event(self, event):
-        pass
+    async def push_event(self, request_id: str, message: str):
+        await self._transport.send(protocol.pack(ExecutionStep(RequestID=request_id, Message=message)))

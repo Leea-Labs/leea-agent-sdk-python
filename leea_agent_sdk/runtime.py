@@ -14,52 +14,67 @@ def start(agent: Agent, transport: Transport = None):
 
 
 async def astart(agent: Agent, transport: Transport = None):
-    hello = AgentHello(
-        Name=agent.name,
-        Description=agent.description,
-        InputSchema=json.dumps(agent.input_schema.model_json_schema()),
-        OutputSchema=json.dumps(agent.output_schema.model_json_schema())
-    )
+    await ThreadedRuntime(agent, transport).astart()
 
-    async def handshake(ts: Transport):
+
+class ThreadedRuntime:
+    def __init__(self, agent: Agent, transport: Transport = None):
+        self.agent = agent
+        self._transport = transport or Transport()
+
+    def start(self):
+        self._aio_run(self.astart)
+
+    async def astart(self):
+        self._transport.on_connect(self._handshake)
+        self.agent.set_transport(self._transport)
+        while True:
+            logger.info("Waiting for execution request")
+            message = protocol.unpack(await self._transport.receive())
+            if isinstance(message, ExecutionRequest):
+                logger.info("Processing request")
+                Thread(
+                    target=self._aio_run,
+                    args=(self._handle_execution_request, message.SerializeToString(),),
+                    daemon=True
+                ).start()
+
+    def _aio_run(self, func, *args):
+        asyncio.run(func(*args))
+
+    async def _handle_execution_request(self, request_bytes: bytes):
+        request = ExecutionRequest()
+        request.ParseFromString(request_bytes)
+        logger.info(f"Execute request {request.RequestID}")
+        input_obj = self.agent.input_schema.model_validate_json(request.Input)
+        result = "{}"
+        try:
+            success = True
+            if asyncio.iscoroutinefunction(self.agent.run):
+                output = await self.agent.run(request.RequestID, input_obj)
+            else:
+                output = self.agent.run(request.RequestID, input_obj)
+            if isinstance(output, self.agent.output_schema):
+                result = output.model_dump_json()
+            else:
+                logger.warn(f"Output is not instance of {type(self.agent.output_schema)}!")
+                result = json.dumps(output)
+        except Exception as e:
+            logger.exception(e)
+            success = False
+        logger.info(f"[RequestID={request.RequestID}] {"Success" if success else "Fail"}")
+        message = ExecutionResult(RequestID=request.RequestID, Result=result, IsSuccessful=success)
+        await self._transport.send(protocol.pack(message))
+
+    async def _handshake(self):
+        hello = AgentHello(
+            Name=self.agent.name,
+            Description=self.agent.description,
+            InputSchema=json.dumps(self.agent.input_schema.model_json_schema()),
+            OutputSchema=json.dumps(self.agent.output_schema.model_json_schema())
+        )
         logger.info("Handshaking")
-        await ts.send(protocol.pack(hello))
-        server_hello = protocol.unpack(await ts.receive())
+        await self._transport.send(protocol.pack(hello))
+        server_hello = protocol.unpack(await self._transport.receive())
         assert isinstance(server_hello, ServerHello)
         logger.info("Handshake successful")
-
-    if transport is None:
-        transport = Transport()
-    transport.on_connect(handshake)
-    agent.set_transport(transport)
-
-    while True:
-        logger.info("Waiting for execution request")
-        message = protocol.unpack(await transport.receive())
-        if isinstance(message, ExecutionRequest):
-            logger.info("Processing request")
-            Thread(
-                target=asyncio.run,
-                args=(_handle_execution_request(transport, agent, message),),
-                daemon=True
-            ).start()
-
-
-async def _handle_execution_request(transport: Transport, agent: Agent, request: ExecutionRequest):
-    logger.info(f"Execute request {request.RequestID}")
-    input_obj = agent.input_schema.model_validate_json(request.Input)
-    result = "{}"
-    try:
-        success = True
-        output = await agent.run(input_obj)
-        if isinstance(output, agent.output_schema):
-            result = output.model_dump_json()
-        else:
-            logger.warn(f"Output is not instance of {type(agent.output_schema)}!")
-            result = json.dumps(output)
-    except Exception as e:
-        logger.exception(e)
-        success = False
-    logger.info(f"[RequestID={request.RequestID}] {"Success" if success else "Fail"}: {result}")
-    message = ExecutionResult(RequestID=request.RequestID, Result=result, IsSuccessful=success)
-    await transport.send(protocol.pack(message))
