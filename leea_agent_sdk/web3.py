@@ -17,7 +17,7 @@ class Web3Instance:
         self.path = keystorePath
         self.password = keystorePassword
 
-    def createWallet(self):
+    def create_wallet(self):
         try:
             keyfile = open(self.path)
         except OSError:
@@ -40,19 +40,16 @@ class Web3Instance:
 
     def connect(self, endpointURL: str):
         w3: Web3 = Web3(Web3.HTTPProvider(endpointURL))
-        connected = w3.is_connected()
-        if connected == False:
-            raise ConnectionError("Cant connect to blockchain")
         w3.middleware_onion.inject(
             SignAndSendRawMiddlewareBuilder.build(self.account), layer=0
         )
         self.w3 = w3
 
-    def signMessage(self, msg: str) -> str:
+    def sign_message(self, msg: str) -> str:
         signedMessage = self.account.sign_message(encode_defunct(keccak(text=msg)))
         return signedMessage.signature.to_0x_hex()
 
-    def verifyMessage(self, msg: str, signature: str) -> bool:
+    def verify_message(self, msg: str, signature: str) -> bool:
         result: bool = Account.recover_message(
             encode_defunct(keccak(text=msg)), signature=signature
         )
