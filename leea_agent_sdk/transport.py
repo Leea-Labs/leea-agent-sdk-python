@@ -1,9 +1,11 @@
 import asyncio
+import time
 from functools import wraps
 from os import getenv
 
-from websockets import ConnectionClosedError
+from websockets.exceptions import ConnectionClosedError
 from websockets.asyncio.client import connect
+from websockets.protocol import State
 
 from leea_agent_sdk.logger import logger
 
@@ -31,16 +33,29 @@ class Transport:
     def on_connect(self, callback):
         self._connect_callbacks.append(callback)
 
-    async def _get_connection(self):
+    async def _get_connection(self, retry=5):
         if self._connection is not None:
             return self._connection
 
         logger.debug(f"Connecting: {self._connect_uri}")
-        self._connection = connect(
-            self._connect_uri,
-            ping_interval=5,
-            ping_timeout=1
-        )
+        tries = retry
+        while tries > 0:
+            try:
+                connection = await connect(
+                    self._connect_uri,
+                    ping_interval=5,
+                    ping_timeout=1
+                )
+                if connection.state == State.OPEN:
+                    self._connection = connection
+                    break
+                else:
+                    raise OSError("Connection closed by server")
+            except OSError:
+                tries -= 1
+                time.sleep(1)
+        if self._connection is None:
+            raise ConnectionError("Cannot connect to API server")
         for cb in self._connect_callbacks:
             if asyncio.iscoroutinefunction(cb):
                 await cb()
@@ -51,11 +66,11 @@ class Transport:
 
     @reconnect_if_closed
     async def send(self, msg: bytes):
-        (await self._get_connection()).send(msg)
+        await (await self._get_connection()).send(msg)
         logger.debug(f"-> {msg}")
 
     @reconnect_if_closed
     async def receive(self) -> bytes:
-        recv = (await self._get_connection()).recv()
+        recv = await (await self._get_connection()).recv()
         logger.debug(f"<- {recv}")
         return recv
