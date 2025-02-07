@@ -9,6 +9,7 @@ from os import urandom
 from leea_agent_sdk.logger import logger
 from eth_account.messages import encode_defunct
 from eth_utils import keccak
+from web3.eth import Contract
 
 
 class Web3Instance:
@@ -28,6 +29,7 @@ class Web3Instance:
             with open(self.path, "w") as f:
                 f.write(json.dumps(encrypted))
                 logger.info(f"New account was saved as file: {self.path}")
+                f.close()
             return
 
         with open(self.path) as keyfile:
@@ -51,8 +53,50 @@ class Web3Instance:
 
     def verify_message(self, msg: str, signature: str) -> bool:
         try:
-            Account.recover_message(encode_defunct(keccak(text=msg)), signature=signature)
+            Account.recover_message(
+                encode_defunct(keccak(text=msg)), signature=signature
+            )
             return True
         except Exception as e:
             logger.exception(e)
             return False
+
+    def register(self, contract_address: str, fee: int, name: str) -> bool:
+        contract_instance: Contract = self.get_contract(contract_address)
+        registered: bool = contract_instance.functions.isAgent(
+            self.account.address
+        ).call()
+        if registered is True:
+            logger.exception("Agent address already registered")
+            return False
+        gas = self.get_gas(self.account.address, fee, name)
+        balance = self.w3.eth.get_balance(self.account.address)
+        if balance < gas:
+            logger.exception(
+                f"Agent balance is less than gas required, please top up by {gas - balance}"
+            )
+            return False
+        tx_hash = contract_instance.functions.registerAgent(
+            self.account.address, fee, name
+        ).transact()
+        self.w3.eth.wait_for_transaction_receipt(tx_hash)
+        txn_receipt = self.w3.eth.get_transaction_receipt(tx_hash)
+        logger.info(f"Transaction receipt {txn_receipt}")
+        return True
+
+    def get_gas(self, contract_address: str, fee: int, name: str) -> int:
+        contract_instance: Contract = self.get_contract(contract_address)
+        gas = contract_instance.functions.registerAgent(
+            self.account.address, fee, name
+        ).estimate_gas()
+        return gas
+
+    def get_contract(self, contract_address: str) -> Contract:
+        with open(
+            "contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
+        ) as abi_file:
+            abi = abi_file.read().rstrip()
+            contract_instance: Contract = self.w3.eth.contract(
+                address=contract_address, abi=abi
+            )
+            return contract_instance
