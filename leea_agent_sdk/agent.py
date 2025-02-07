@@ -3,7 +3,6 @@ from typing import Type
 
 from pydantic import BaseModel
 
-from leea_agent_sdk import protocol
 from leea_agent_sdk.protocol.protocol_pb2 import ExecutionLog
 from leea_agent_sdk.transport import Transport
 
