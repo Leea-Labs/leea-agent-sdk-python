@@ -30,7 +30,7 @@ class ThreadedRuntime:
         self.agent.set_transport(self._transport)
         while True:
             logger.info("Waiting for execution request")
-            message = protocol.unpack(await self._transport.receive())
+            message = await self._transport.receive()
             if isinstance(message, ExecutionRequest):
                 logger.info("Processing request")
                 Thread(
@@ -64,7 +64,7 @@ class ThreadedRuntime:
             success = False
         logger.info(f"[RequestID={request.RequestID}] {'Success' if success else 'Fail'}")
         message = ExecutionResult(RequestID=request.RequestID, Result=result, IsSuccessful=success)
-        await self._transport.send(protocol.pack(message))
+        await self._transport.send(message)
 
     async def _handshake(self):
         hello = AgentHello(
@@ -74,7 +74,7 @@ class ThreadedRuntime:
             OutputSchema=json.dumps(self.agent.output_schema.model_json_schema())
         )
         logger.info("Handshaking")
-        await self._transport.send(protocol.pack(hello))
-        server_hello = protocol.unpack(await self._transport.receive())
+        await self._transport.send(hello)
+        server_hello = await self._transport.receive()
         assert isinstance(server_hello, ServerHello)
         logger.info("Handshake successful")
