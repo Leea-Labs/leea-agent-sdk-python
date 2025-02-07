@@ -1,6 +1,8 @@
-import leea_agent_sdk.web3 as web3
+import pytest
+from leea_agent_sdk.web3 import Web3Instance
+from web3 import Web3, HTTPProvider
 
-inst = web3.Web3Instance("leea_acc.json", "12345678")
+inst = Web3Instance("leea_acc.json", "12345678")
 
 
 def test_create_wallet():
@@ -16,5 +18,78 @@ def test_sign_verify():
 
 
 def test_connect():
-    connected: bool = inst.connect("https://sepolia.base.org")
+    connected: bool = inst.connect("http://127.0.0.1:8545")
     assert connected is True
+
+
+@pytest.fixture
+def tester_provider():
+    return HTTPProvider("http://127.0.0.1:8545")
+
+
+@pytest.fixture
+def eth_tester(tester_provider):
+    return tester_provider.ethereum_tester
+
+
+@pytest.fixture
+def w3(tester_provider):
+    return Web3(tester_provider)
+
+
+@pytest.fixture
+def agent_registry_contract_address(w3) -> str:
+    with open(
+        "./contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
+    ) as abi_file:
+        abi = abi_file.read().rstrip()
+    with open(
+        "./contracts/contracts/artifacts/aregistry/AgentRegistry.bin", "r"
+    ) as bin_file:
+        bin = bin_file.read()
+    w3.eth.default_account = w3.eth.accounts[0]
+    registry = w3.eth.contract(abi=abi, bytecode=bin)
+    tx_hash = registry.constructor(
+        inst.account.address, "0x153E8ea256fDC02487882aa48A009D3573C25F99"
+    ).transact()
+    tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    return tx_receipt.contractAddress
+
+
+def test_register_agent_local(agent_registry_contract_address, w3):
+    connected: bool = inst.connect("http://127.0.0.1:8545")
+    assert connected is True
+    fee = 100
+    name = "GPT"
+    tx_hash = w3.eth.send_transaction(
+        {
+            "from": w3.eth.accounts[0],
+            "to": inst.account.address,
+            "value": inst.get_gas(
+                contract_address=agent_registry_contract_address, fee=fee, name=name
+            ),
+        }
+    )
+    w3.eth.wait_for_transaction_receipt(tx_hash)
+    ok = inst.register(
+        contract_address=agent_registry_contract_address, fee=fee, name=name
+    )
+    assert ok is True
+    # try to register again
+    ok = inst.register(
+        contract_address=agent_registry_contract_address, fee=fee, name=name
+    )
+    assert ok is False
+
+
+# def test_register_agent_Holesky():
+#     # Leea Token at Holesky 0x8cB8AB2a22a882032d277ae29B4c70F60444f95e
+#     # Leea DAO at Holesky 0x153E8ea256fDC02487882aa48A009D3573C25F99
+#     # Leea Agent Registry 0xe61461139682822a9033A28DDc35377A50edc52e
+#     # Owner 0xDB7B9cd59ebF909D2F29D0278162A17a43fBBb50
+#     connected: bool = inst.connect(
+#         "https://eth-holesky.g.alchemy.com/v2/1izUATcVfjpS7adsi0n76hyx--yUbmA1"
+#     )
+#     assert connected is True
+#     ok = inst.register("0xe61461139682822a9033A28DDc35377A50edc52e", 100, "GPT")
+#     assert ok is True
