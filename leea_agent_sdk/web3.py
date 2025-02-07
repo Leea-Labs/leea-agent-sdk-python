@@ -39,12 +39,7 @@ class Web3Instance:
             logger.info(f"Using existing account: {self.account.address}")
             keyfile.close()
 
-    def connect(self, endpoint: str):
-        w3: Web3 = Web3(Web3.HTTPProvider(endpoint))
-        w3.middleware_onion.inject(
-            SignAndSendRawMiddlewareBuilder.build(self.account), layer=0
-        )
-        self.w3 = w3
+    def connected(self):
         return self.w3.is_connected()
 
     def sign_message(self, msg: str) -> str:
@@ -60,9 +55,15 @@ class Web3Instance:
         except Exception as e:
             logger.exception(e)
             return False
-
+        
+    def set_web3_provider(self, w3: Web3):
+        w3.middleware_onion.inject(
+            SignAndSendRawMiddlewareBuilder.build(self.account), layer=0
+        )
+        self.w3 = w3
+    
     def register(self, contract_address: str, fee: int, name: str) -> bool:
-        contract_instance: Contract = self.get_contract(contract_address)
+        contract_instance: Contract = self.get_registry_contract(contract_address)
         registered: bool = contract_instance.functions.isAgent(
             self.account.address
         ).call()
@@ -85,13 +86,13 @@ class Web3Instance:
         return True
 
     def get_gas(self, contract_address: str, fee: int, name: str) -> int:
-        contract_instance: Contract = self.get_contract(contract_address)
+        contract_instance: Contract = self.get_registry_contract(contract_address)
         gas = contract_instance.functions.registerAgent(
             self.account.address, fee, name
         ).estimate_gas()
         return gas
 
-    def get_contract(self, contract_address: str) -> Contract:
+    def get_registry_contract(self, contract_address: str) -> Contract:
         with open(
             "contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
         ) as abi_file:
