@@ -11,8 +11,7 @@ from eth_account.messages import encode_defunct
 from eth_utils import keccak
 from web3.eth import Contract
 
-
-class Web3Instance:
+class Web3InstanceEVM:
     account: LocalAccount
     w3: Web3
 
@@ -36,6 +35,9 @@ class Web3Instance:
             private_key = Account.decrypt(encrypted_file, self.password)
             self.account: LocalAccount = Account.from_key(private_key)
             logger.info(f"Using existing account: {self.account.address}")
+    
+    def get_agent_id(self) -> str:
+        return self.account.address
 
     def connected(self):
         return self.w3.is_connected()
@@ -92,7 +94,7 @@ class Web3Instance:
 
     def get_registry_contract(self, contract_address: str) -> Contract:
         with open(
-                "contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
+            "contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
         ) as abi_file:
             abi = abi_file.read().rstrip()
             contract_instance: Contract = self.w3.eth.contract(
