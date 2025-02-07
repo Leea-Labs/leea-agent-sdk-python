@@ -29,7 +29,7 @@ class SummarizerAgent(Agent):
         if input.slow_motion > 0:
             await asyncio.sleep(input.slow_motion)
         if input.create_event:
-            await self.push_event(request_id, "Test Event")
+            await self.push_log(request_id, "Test Event")
         return SummarizerAgentOutput(value=input.a + input.b)
 
 

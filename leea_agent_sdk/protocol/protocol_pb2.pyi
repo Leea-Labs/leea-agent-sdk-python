@@ -13,13 +13,13 @@ class Envelope(_message.Message):
         ServerHello: _ClassVar[Envelope.MessageType]
         ExecutionRequest: _ClassVar[Envelope.MessageType]
         ExecutionResult: _ClassVar[Envelope.MessageType]
-        ExecutionStep: _ClassVar[Envelope.MessageType]
+        ExecutionLog: _ClassVar[Envelope.MessageType]
         Error: _ClassVar[Envelope.MessageType]
     AgentHello: Envelope.MessageType
     ServerHello: Envelope.MessageType
     ExecutionRequest: Envelope.MessageType
     ExecutionResult: Envelope.MessageType
-    ExecutionStep: Envelope.MessageType
+    ExecutionLog: Envelope.MessageType
     Error: Envelope.MessageType
     TYPE_FIELD_NUMBER: _ClassVar[int]
     PAYLOAD_FIELD_NUMBER: _ClassVar[int]
@@ -63,7 +63,7 @@ class ExecutionRequest(_message.Message):
     Signature: str
     def __init__(self, RequestID: _Optional[str] = ..., AgentID: _Optional[str] = ..., Input: _Optional[str] = ..., Signature: _Optional[str] = ...) -> None: ...
 
-class ExecutionStep(_message.Message):
+class ExecutionLog(_message.Message):
     __slots__ = ("RequestID", "Message", "Signature")
     REQUESTID_FIELD_NUMBER: _ClassVar[int]
     MESSAGE_FIELD_NUMBER: _ClassVar[int]
