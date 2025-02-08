@@ -1,8 +1,8 @@
 import pytest
-from leea_agent_sdk.web3 import Web3Instance
+from leea_agent_sdk.web3_evm import Web3InstanceEVM
 from web3 import Web3, EthereumTesterProvider
 
-inst = Web3Instance("leea_acc.json", "12345678")
+inst = Web3InstanceEVM("leea_acc.json", "12345678")
 
 
 def test_create_wallet():
@@ -35,11 +35,11 @@ def w3(tester_provider):
 @pytest.fixture
 def agent_registry_contract_address(w3) -> str:
     with open(
-            "./contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
+        "./contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
     ) as abi_file:
         abi = abi_file.read().rstrip()
     with open(
-            "./contracts/contracts/artifacts/aregistry/AgentRegistry.bin", "r"
+        "./contracts/contracts/artifacts/aregistry/AgentRegistry.bin", "r"
     ) as bin_file:
         bin = bin_file.read()
     w3.eth.default_account = w3.eth.accounts[0]
