@@ -1,3 +1,4 @@
+import os.path
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
@@ -7,12 +8,14 @@ from leea_agent_sdk.logger import logger
 from eth_account.messages import encode_defunct
 from eth_utils import keccak
 from web3.eth import Contract
+from os import urandom
+
 
 class Web3InstanceEVM:
     account: LocalAccount
     w3: Web3
 
-    def __init__(self, keystore_path: str):
+    def __init__(self, keystore_path: str, keystore_password: str):
         self.path = keystore_path
         self.password = keystore_password
 
@@ -31,7 +34,7 @@ class Web3InstanceEVM:
             private_key = Account.decrypt(json.load(keyfile), "12345678")
             self.account: LocalAccount = Account.from_key(private_key)
             logger.info(f"Using existing account: {self.account.address}")
-    
+
     def get_agent_id(self) -> str:
         return self.account.address
 
