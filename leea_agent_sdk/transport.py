@@ -1,5 +1,5 @@
 import asyncio
-from os import getenv, getcwd
+from os import getenv
 
 from websockets.asyncio.client import connect
 from websockets.exceptions import ConnectionClosed
