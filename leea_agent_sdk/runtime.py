@@ -25,58 +25,49 @@ class ThreadedRuntime:
         self._aio_run(self.astart)
 
     async def astart(self):
-        self._transport.on_connect(self._handshake)
+        self._transport.on_connected(self._handshake)
+        self._transport.subscribe_message(lambda msg: isinstance(msg, ExecutionRequest), self._on_request)
+
         self.agent.set_transport(self._transport)
-        while True:
-            logger.info("Waiting for execution request")
-            message = await self._transport.receive()
-            if isinstance(message, ExecutionRequest):
-                logger.info("Processing request")
-                Thread(
-                    target=self._aio_run,
-                    args=(self._handle_execution_request, message.SerializeToString(),),
-                    daemon=True
-                ).start()
-            else:
-                logger.debug("Got non-handled message")
+        await self._transport.run()
 
     def _aio_run(self, func, *args):
         asyncio.run(func(*args))
 
-    async def _handle_execution_request(self, request_bytes: bytes):
-        request = ExecutionRequest()
-        request.ParseFromString(request_bytes)
-        logger.info(f"Execute request {request.RequestID}")
-        input_obj = self.agent.input_schema.model_validate_json(request.Input)
-        result = "{}"
-        try:
-            success = True
-            if asyncio.iscoroutinefunction(self.agent.run):
-                output = await self.agent.run(request.RequestID, input_obj)
-            else:
-                output = self.agent.run(request.RequestID, input_obj)
-            if isinstance(output, self.agent.output_schema):
-                result = output.model_dump_json()
-            else:
-                logger.warn(f"Output is not instance of {type(self.agent.output_schema)}!")
-                result = json.dumps(output)
-        except Exception as e:
-            logger.exception(e)
-            success = False
-        logger.info(f"[RequestID={request.RequestID}] {'Success' if success else 'Fail'}")
-        message = ExecutionResult(RequestID=request.RequestID, Result=result, IsSuccessful=success)
-        await self._transport.send(message)
+    def _on_request(self, transport: Transport, request: ExecutionRequest):
+        def _handle(loop, request: ExecutionRequest):
+            logger.info(f"Execute request {request.RequestID}")
+            input_obj = self.agent.input_schema.model_validate_json(request.Input)
+            result = "{}"
+            try:
+                agent_task = asyncio.run_coroutine_threadsafe(
+                    self.agent.run(request.RequestID, input_obj), loop
+                )
+                output = agent_task.result()
+                success = True
+                if isinstance(output, self.agent.output_schema):
+                    result = output.model_dump_json()
+                else:
+                    logger.warn(f"Output is not instance of {type(self.agent.output_schema)}!")
+                    result = json.dumps(output)
+            except Exception as e:
+                logger.exception(e)
+                success = False
+            logger.info(f"[RequestID={request.RequestID}] {'Success' if success else 'Fail'}")
+            message = ExecutionResult(RequestID=request.RequestID, Result=result, IsSuccessful=success)
+            asyncio.run_coroutine_threadsafe(transport.send(message), loop)
 
-    async def _handshake(self):
-        hello = AgentHello(
+        Thread(target=_handle, args=(asyncio.get_event_loop(), request), daemon=True).start()
+
+    async def _handshake(self, transport: Transport):
+        logger.info("Handshaking")
+        server_hello = await self._transport.send(AgentHello(
             Name=self.agent.name,
             Description=self.agent.description,
             InputSchema=json.dumps(self.agent.input_schema.model_json_schema()),
             OutputSchema=json.dumps(self.agent.output_schema.model_json_schema()),
             PublicKey=self._transport.get_public_key()
-        )
-        logger.info("Handshaking")
-        await self._transport.send(hello)
-        server_hello = await self._transport.receive()
+        ), lambda msg: isinstance(msg, ServerHello))
         assert isinstance(server_hello, ServerHello)
         logger.info("Handshake successful")
+        await self.agent.ready()
