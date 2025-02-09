@@ -6,3 +6,4 @@ eth-utils==5.2.0
 eth-account==0.13.4
 solana==0.36.2
 solders==0.23.0
+jsonschema==4.23.0
