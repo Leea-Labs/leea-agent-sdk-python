@@ -1,4 +1,5 @@
 import asyncio
+import os.path
 from os import getenv
 
 from websockets.asyncio.client import connect
@@ -26,8 +27,9 @@ class Transport:
             f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:1211')}/agents"
         )
         self._api_key = api_key or getenv("LEEA_API_KEY")
+        wallet_path = wallet_path or getenv("LEEA_WALLET_PATH")
         self._wallet = Web3InstanceSolana(
-            wallet_path or getenv("LEEA_WALLET_PATH")
+            wallet_path if os.path.isabs(wallet_path) else os.path.join(os.getcwd(), wallet_path)
         )
         if not self._api_key:
             raise RuntimeError("Please provide LEEA_API_KEY")
