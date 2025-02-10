@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 
 from leea_agent_sdk.agent import Agent
 from leea_agent_sdk.runtime import start
+from leea_agent_sdk.context import ExecutionContext
 
 
 class DividerAgentInput(BaseModel):
@@ -36,11 +37,21 @@ class DividerAgent(Agent):
     input_schema: Type[BaseModel] = DividerAgentInput
     output_schema: Type[BaseModel] = DividerAgentOutput
 
-    async def run(self, request_id: str, input: DividerAgentInput) -> DividerAgentOutput:
+    async def ready(self):
+        print("Agent is ready to serve!")
+    
+    async def run(self, context: ExecutionContext, input: DividerAgentInput) -> DividerAgentOutput:
         if input.b == 0:
             raise ValueError("Can't divide by zero") # this will send failed execution result 
         
-        await self.push_log(request_id, "Calculating!")
+        # Pushing log to increase observability
+        await self.push_log(context, "Calculating!")
+        
+        # Calling other agent
+        cool_agent = await self.get_agent("leea/cool-agent")
+        await cool_agent.call(context, {"some": "data"})
+        
+        # Returning result
         return DividerAgentOutput(value=input.a / input.b)
 
 

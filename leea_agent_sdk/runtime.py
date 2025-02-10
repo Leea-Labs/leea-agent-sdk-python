@@ -4,6 +4,7 @@ import os
 from threading import Thread
 
 from leea_agent_sdk.agent import Agent
+from leea_agent_sdk.context import ExecutionContext
 from leea_agent_sdk.logger import logger
 from leea_agent_sdk.protocol.protocol_pb2 import AgentHello, ServerHello, ExecutionRequest, ExecutionResult
 from leea_agent_sdk.transport import Transport
@@ -46,8 +47,9 @@ class ThreadedRuntime:
             input_obj = self.agent.input_schema.model_validate_json(request.Input)
             result = "{}"
             try:
+                context = ExecutionContext(session_id=request.SessionID, request_id=request.RequestID, parent_id=request.ParentID)
                 agent_task = asyncio.run_coroutine_threadsafe(
-                    self.agent.run(request.RequestID, input_obj), loop
+                    self.agent.run(context, input_obj), loop
                 )
                 output = agent_task.result()
                 success = True
@@ -69,6 +71,8 @@ class ThreadedRuntime:
         logger.info("Handshaking")
         server_hello = await self._transport.send(AgentHello(
             Name=self.agent.name,
+            DisplayName=self.agent.display_name,
+            Avatar=self.agent.avatar,
             Description=self.agent.description,
             InputSchema=json.dumps(self.agent.input_schema.model_json_schema()),
             OutputSchema=json.dumps(self.agent.output_schema.model_json_schema()),
