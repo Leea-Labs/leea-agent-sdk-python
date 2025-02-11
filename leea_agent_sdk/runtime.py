@@ -62,7 +62,7 @@ class ThreadedRuntime:
         except Exception as e:
             logger.exception(e)
             success = False
-        logger.info(f"[RequestID={request.RequestID}] {"Success" if success else "Fail"}")
+        logger.info(f"[RequestID={request.RequestID}] {'Success' if success else 'Fail'}")
         message = ExecutionResult(RequestID=request.RequestID, Result=result, IsSuccessful=success)
         await self._transport.send(protocol.pack(message))
 

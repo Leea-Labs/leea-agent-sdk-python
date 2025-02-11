@@ -28,7 +28,7 @@ class Transport:
     _connect_callbacks = []
 
     def __init__(self):
-        self._connect_uri = f"{getenv("LEEA_API_WS_HOST", "ws://localhost:8081")}/api/v1/connect"
+        self._connect_uri = f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:8081')}/api/v1/connect"
 
     def on_connect(self, callback):
         self._connect_callbacks.append(callback)
