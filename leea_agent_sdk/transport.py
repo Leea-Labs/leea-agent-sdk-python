@@ -7,15 +7,17 @@ from websockets.sync.client import connect as ws_connect
 from leea_agent_sdk.logger import logger
 from leea_agent_sdk.protocol import messages, ProtoMessage
 
+
 def reconnect_if_closed(method):
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         try:
             return method(self, *args, **kwargs)
-        except ConnectionClosedError as e:
-            logger.warning(f"Connection error, reconnecting...")
+        except ConnectionClosedError:
+            logger.warning("Connection error, reconnecting...")
             self.connection = self.connect()
             return method(self, *args, **kwargs)
+
     return wrapper
 
 
