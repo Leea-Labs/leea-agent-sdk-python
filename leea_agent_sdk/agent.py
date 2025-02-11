@@ -56,13 +56,14 @@ class Agent(BaseModel, ABC):
 
     __api: LeeaApi = None
 
-    def __get_api_client(self) -> LeeaApi:
+    @property
+    def __api_client(self) -> LeeaApi:
         if self.__api is None:
             self.__api = LeeaApi()
         return self.__api
 
     async def get_agent(self, alias: str) -> RemoteAgent:
-        agent = self.__get_api_client().get_agent(alias)
+        agent = await self.__api_client.get_agent(alias)
         agent['input_schema'] = json.loads(agent['input_schema'])
         agent['output_schema'] = json.loads(agent['output_schema'])
         remote_agent = RemoteAgent(**agent)
