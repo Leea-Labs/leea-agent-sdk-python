@@ -4,11 +4,10 @@ from functools import wraps
 from websockets import ConnectionClosedError
 from websockets.sync.client import connect as ws_connect
 
-from leea.logger import logger
-from leea.protocol import messages, ProtoMessage
+from leea_agent_sdk.logger import logger
+from leea_agent_sdk.protocol import messages, ProtoMessage
 
 def reconnect_if_closed(method):
-    """Декоратор, перехватывающий ошибки соединения и выполняющий переподключение."""
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         try:
