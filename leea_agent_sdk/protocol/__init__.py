@@ -14,7 +14,7 @@ def pack(message: _message.Message) -> bytes:
 def unpack(data: bytes) -> _message.Message:
     envelope = Envelope()
     envelope.ParseFromString(data)
-    message_type = Envelope.MessageType.keys()[envelope.Type]
+    message_type = Envelope.MessageType.Name(envelope.Type)
     message_type = DESCRIPTOR.message_types_by_name[message_type]
     message = message_factory.GetMessageClass(message_type)()
     message.ParseFromString(envelope.Payload)

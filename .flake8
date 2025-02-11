@@ -8,4 +8,4 @@ exclude =
     venv,
     leea_agent_sdk/protocol/*_pb2.py*
 max-complexity = 15
-max-line-length = 120
+max-line-length = 180

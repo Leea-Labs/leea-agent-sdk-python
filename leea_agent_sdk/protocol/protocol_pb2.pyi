@@ -9,10 +9,14 @@ class Envelope(_message.Message):
     __slots__ = ("Type", "Payload")
     class MessageType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = ()
+        AgentHello: _ClassVar[Envelope.MessageType]
+        ServerHello: _ClassVar[Envelope.MessageType]
         ExecutionRequest: _ClassVar[Envelope.MessageType]
         ExecutionResult: _ClassVar[Envelope.MessageType]
         ExecutionStep: _ClassVar[Envelope.MessageType]
         Error: _ClassVar[Envelope.MessageType]
+    AgentHello: Envelope.MessageType
+    ServerHello: Envelope.MessageType
     ExecutionRequest: Envelope.MessageType
     ExecutionResult: Envelope.MessageType
     ExecutionStep: Envelope.MessageType
@@ -22,6 +26,22 @@ class Envelope(_message.Message):
     Type: Envelope.MessageType
     Payload: bytes
     def __init__(self, Type: _Optional[_Union[Envelope.MessageType, str]] = ..., Payload: _Optional[bytes] = ...) -> None: ...
+
+class AgentHello(_message.Message):
+    __slots__ = ("Name", "Description", "InputSchema", "OutputSchema")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    INPUTSCHEMA_FIELD_NUMBER: _ClassVar[int]
+    OUTPUTSCHEMA_FIELD_NUMBER: _ClassVar[int]
+    Name: str
+    Description: str
+    InputSchema: str
+    OutputSchema: str
+    def __init__(self, Name: _Optional[str] = ..., Description: _Optional[str] = ..., InputSchema: _Optional[str] = ..., OutputSchema: _Optional[str] = ...) -> None: ...
+
+class ServerHello(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
 
 class Error(_message.Message):
     __slots__ = ("RequestID", "Message")

@@ -5,15 +5,28 @@ package leea_agent_sdk;
 message Envelope {
 
   enum MessageType {
-    ExecutionRequest = 0;
-    ExecutionResult = 1;
-    ExecutionStep = 2;
-    Error = 3;
+    AgentHello = 0;
+    ServerHello = 1;
+
+    ExecutionRequest = 100;
+    ExecutionResult = 101;
+    ExecutionStep = 102;
+
+    Error = 500;
   }
 
   MessageType Type = 1;
   bytes Payload = 2;
 }
+
+message AgentHello {
+  string Name = 1;
+  string Description = 2;
+  string InputSchema = 3;
+  string OutputSchema = 4;
+}
+
+message ServerHello {}
 
 message Error {
   string RequestID = 1;
