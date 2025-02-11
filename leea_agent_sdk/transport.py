@@ -2,7 +2,8 @@ import asyncio
 from functools import wraps
 from os import getenv
 
-from websockets import ConnectionClosedError, connect as ws_connect
+from websockets import ConnectionClosedError
+from websockets.asyncio.client import connect
 
 from leea_agent_sdk.logger import logger
 
@@ -35,7 +36,7 @@ class Transport:
             return self._connection
 
         logger.debug(f"Connecting: {self._connect_uri}")
-        self._connection = ws_connect(
+        self._connection = connect(
             self._connect_uri,
             ping_interval=5,
             ping_timeout=1
