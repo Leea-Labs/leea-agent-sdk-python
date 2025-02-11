@@ -1,10 +1,10 @@
 import json
 import uuid
 from abc import abstractmethod, ABC
-from typing import Type
+from typing import Type, Literal
 
 import jsonschema
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from leea_agent_sdk.api import LeeaApi
 from leea_agent_sdk.protocol.protocol_pb2 import ExecutionLog, ExecutionRequest, ExecutionResult
@@ -47,6 +47,7 @@ class Agent(BaseModel, ABC):
 
     input_schema: Type[BaseModel]
     output_schema: Type[BaseModel]
+    visibility: Literal["public", "private", "hidden"] = Field(default="public")
 
     _transport: Transport = None
 

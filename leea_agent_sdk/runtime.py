@@ -73,7 +73,8 @@ class ThreadedRuntime:
             InputSchema=json.dumps(self.agent.input_schema.model_json_schema()),
             OutputSchema=json.dumps(self.agent.output_schema.model_json_schema()),
             Signature=self._wallet.sign_message(self.agent.name.encode()),
-            PublicKey=self._wallet.get_public_key()
+            PublicKey=self._wallet.get_public_key(),
+            Visibility=AgentHello.AgentVisibility.Value(self.agent.visibility)
         ), lambda msg: isinstance(msg, ServerHello))
         assert isinstance(server_hello, ServerHello)
         logger.info("Handshake successful")
