@@ -11,6 +11,7 @@ class SummarizerAgentInput(BaseModel):
     a: int = Field(description="A")
     b: int = Field(description="B")
     slow_motion: int = Field(default=0)
+    create_event: bool = Field(default=False)
 
 
 class SummarizerAgentOutput(BaseModel):
@@ -24,9 +25,11 @@ class SummarizerAgent(Agent):
     input_schema: Type[BaseModel] = SummarizerAgentInput
     output_schema: Type[BaseModel] = SummarizerAgentOutput
 
-    async def run(self, input: SummarizerAgentInput) -> SummarizerAgentOutput:
+    async def run(self, request_id: str, input: SummarizerAgentInput) -> SummarizerAgentOutput:
         if input.slow_motion > 0:
             await asyncio.sleep(input.slow_motion)
+        if input.create_event:
+            await self.push_event(request_id, "Test Event")
         return SummarizerAgentOutput(value=input.a + input.b)
 
 
@@ -46,9 +49,9 @@ class DummyTransport(Transport):
             self.connected = True
             for cb in self._connect_callbacks:
                 if asyncio.iscoroutinefunction(cb):
-                    await cb(self)
+                    await cb()
                 else:
-                    cb(self)
+                    cb()
 
     async def send(self, msg: bytes):
         await self._get_connection()

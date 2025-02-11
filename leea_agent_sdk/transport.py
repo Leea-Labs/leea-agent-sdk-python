@@ -42,9 +42,9 @@ class Transport:
         )
         for cb in self._connect_callbacks:
             if asyncio.iscoroutinefunction(cb):
-                await cb(self)
+                await cb()
             else:
-                cb(self)
+                cb()
 
         return self._connection
 
