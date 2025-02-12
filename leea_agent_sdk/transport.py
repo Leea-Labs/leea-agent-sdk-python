@@ -3,7 +3,7 @@ import os.path
 from os import getenv
 
 from websockets.asyncio.client import connect
-from websockets.exceptions import ConnectionClosed
+from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 
 from leea_agent_sdk.protocol.protocol_pb2 import Envelope, DESCRIPTOR
 
@@ -23,9 +23,11 @@ class Transport:
     _requests_in_flight = {}
 
     def __init__(self, api_key=None, wallet_path=None):
+
         self._connect_uri = (
             f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:1211')}/agents"
         )
+        print(self._connect_uri)
         self._api_key = api_key or getenv("LEEA_API_KEY")
         wallet_path = wallet_path or getenv("LEEA_WALLET_PATH")
         self._wallet = Web3InstanceSolana(
@@ -73,7 +75,13 @@ class Transport:
                         tasks.append(asyncio.create_task(func(self)))
                 tasks.append(self._reader_loop(ws))
                 await asyncio.gather(*tasks)
-            except ConnectionClosed:
+            except ConnectionClosedOK:
+                return
+            except ConnectionClosedError as e:
+                if e.rcvd.reason:
+                    logger.error(e.rcvd.reason)
+                if e.rcvd.code == 1002:
+                    return
                 self._connected = False
                 self._socket = None
 
