@@ -4,7 +4,6 @@ import time
 import pytest
 
 import leea_agent_sdk.runtime as rt
-from leea_agent_sdk import protocol
 from leea_agent_sdk.protocol.protocol_pb2 import ServerHello, AgentHello, ExecutionRequest, ExecutionResult
 from tests.unit.stubs import SummarizerAgent, DummyTransport, SummarizerAgentInput, SummarizerAgentOutput
 from tests.unit.stubs import NoMessagesError

@@ -2,7 +2,6 @@ import asyncio
 import json
 from threading import Thread
 
-import leea_agent_sdk.protocol as protocol
 from leea_agent_sdk.agent import Agent
 from leea_agent_sdk.logger import logger
 from leea_agent_sdk.protocol.protocol_pb2 import AgentHello, ServerHello, ExecutionRequest, ExecutionResult
