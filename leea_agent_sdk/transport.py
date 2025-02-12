@@ -27,8 +27,11 @@ class Transport:
     _connection = None
     _connect_callbacks = []
 
-    def __init__(self):
+    def __init__(self, api_key=None):
         self._connect_uri = f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:8081')}/api/v1/connect"
+        self._api_key = api_key or getenv("LEEA_API_KEY")
+        if not self._api_key:
+            raise RuntimeError("Please provide LEEA_API_KEY")
 
     def on_connect(self, callback):
         self._connect_callbacks.append(callback)
@@ -44,7 +47,10 @@ class Transport:
                 connection = await connect(
                     self._connect_uri,
                     ping_interval=5,
-                    ping_timeout=1
+                    ping_timeout=1,
+                    additional_headers={
+                        'Authorization': self._api_key
+                    }
                 )
                 if connection.state == State.OPEN:
                     self._connection = connection
