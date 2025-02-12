@@ -171,4 +171,4 @@ cython_debug/
 .pypirc
 .vscode
 
-wallet.json
+wallet*.json
