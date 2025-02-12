@@ -37,6 +37,8 @@ class ThreadedRuntime:
                     args=(self._handle_execution_request, message.SerializeToString(),),
                     daemon=True
                 ).start()
+            else:
+                logger.debug("Got non-handled message")
 
     def _aio_run(self, func, *args):
         asyncio.run(func(*args))
@@ -70,7 +72,8 @@ class ThreadedRuntime:
             Name=self.agent.name,
             Description=self.agent.description,
             InputSchema=json.dumps(self.agent.input_schema.model_json_schema()),
-            OutputSchema=json.dumps(self.agent.output_schema.model_json_schema())
+            OutputSchema=json.dumps(self.agent.output_schema.model_json_schema()),
+            PublicKey=self._transport.get_public_key()
         )
         logger.info("Handshaking")
         await self._transport.send(hello)

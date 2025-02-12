@@ -2,18 +2,16 @@ import pytest
 from leea_agent_sdk.web3 import Web3Instance
 from web3 import Web3, EthereumTesterProvider
 
-inst = Web3Instance("leea_acc.json", "12345678")
+inst = Web3Instance("wallet.json")
 
 
 def test_create_wallet():
-    inst.create_wallet()
     assert inst.account.address is not None, "address cant be empty"
 
 
 def test_sign_verify():
-    inst.create_wallet()
-    sig: str = inst.sign_message("Hello World")
-    ver: bool = inst.verify_message("Hello World", sig)
+    public_key, sig = inst.sign_message("Hello World".encode())
+    ver: bool = inst.verify_message("Hello World".encode(), sig)
     assert ver is True
 
 
