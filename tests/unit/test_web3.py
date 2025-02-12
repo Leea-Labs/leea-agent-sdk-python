@@ -4,6 +4,7 @@ from web3 import Web3, EthereumTesterProvider
 
 inst = Web3Instance("leea_acc.json", "12345678")
 
+
 def test_create_wallet():
     inst.create_wallet()
     assert inst.account.address is not None, "address cant be empty"
@@ -14,6 +15,7 @@ def test_sign_verify():
     sig: str = inst.sign_message("Hello World")
     ver: bool = inst.verify_message("Hello World", sig)
     assert ver is True
+
 
 @pytest.fixture
 def tester_provider():
@@ -33,11 +35,11 @@ def w3(tester_provider):
 @pytest.fixture
 def agent_registry_contract_address(w3) -> str:
     with open(
-        "./contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
+            "./contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
     ) as abi_file:
         abi = abi_file.read().rstrip()
     with open(
-        "./contracts/contracts/artifacts/aregistry/AgentRegistry.bin", "r"
+            "./contracts/contracts/artifacts/aregistry/AgentRegistry.bin", "r"
     ) as bin_file:
         bin = bin_file.read()
     w3.eth.default_account = w3.eth.accounts[0]
@@ -74,7 +76,6 @@ def test_register_agent_local(agent_registry_contract_address, w3):
         contract_address=agent_registry_contract_address, fee=fee, name=name
     )
     assert ok is False
-
 
 # def test_register_agent_Holesky():
 #     # Leea Token at Holesky 0x8cB8AB2a22a882032d277ae29B4c70F60444f95e

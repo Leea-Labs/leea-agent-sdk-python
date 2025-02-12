@@ -55,13 +55,13 @@ class Web3Instance:
         except Exception as e:
             logger.exception(e)
             return False
-        
+
     def set_web3_provider(self, w3: Web3):
         w3.middleware_onion.inject(
             SignAndSendRawMiddlewareBuilder.build(self.account), layer=0
         )
         self.w3 = w3
-    
+
     def register(self, contract_address: str, fee: int, name: str) -> bool:
         contract_instance: Contract = self.get_registry_contract(contract_address)
         registered: bool = contract_instance.functions.isAgent(
@@ -94,7 +94,7 @@ class Web3Instance:
 
     def get_registry_contract(self, contract_address: str) -> Contract:
         with open(
-            "contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
+                "contracts/contracts/artifacts/aregistry/AgentRegistry.abi", "r"
         ) as abi_file:
             abi = abi_file.read().rstrip()
             contract_instance: Contract = self.w3.eth.contract(
