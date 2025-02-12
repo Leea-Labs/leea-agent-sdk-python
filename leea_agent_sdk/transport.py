@@ -49,7 +49,7 @@ class Transport:
                     ping_interval=5,
                     ping_timeout=1,
                     additional_headers={
-                        'Authorization': self._api_key
+                        'Authorization': f"Bearer {self._api_key}"
                     }
                 )
                 if connection.state == State.OPEN:
