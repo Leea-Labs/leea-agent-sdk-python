@@ -4,3 +4,4 @@
 
 pytest
 flake8
+eth_tester
