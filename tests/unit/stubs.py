@@ -27,7 +27,7 @@ class SummarizerAgent(Agent):
     output_schema: Type[BaseModel] = SummarizerAgentOutput
 
     async def run(
-        self, request_id: str, input: SummarizerAgentInput
+            self, request_id: str, input: SummarizerAgentInput
     ) -> SummarizerAgentOutput:
         if input.slow_motion > 0:
             await asyncio.sleep(input.slow_motion)
@@ -40,30 +40,28 @@ class NoMessagesError(Exception):
     pass
 
 
+class alist(list):
+    async def __aiter__(self):
+        for _ in self:
+            yield _
+
+
 class DummyTransport(Transport):
     def __init__(self, to_receive=[]):
         os.environ["LEEA_WALLET_PATH"] = "tests/unit/fixtures/id.json"
         super().__init__("API_KEY")
         self.to_receive = to_receive
         self.sent = []
-        self.connected = []
         self._connect_callbacks = []
 
-    async def _get_connection(self):
-        if not self.connected:
-            self.connected = True
-            for cb in self._connect_callbacks:
-                if asyncio.iscoroutinefunction(cb):
-                    await cb()
-                else:
-                    cb()
+    async def run(self):
+        for func in self._connect_subscribers:
+            await func(self)
+        await self._reader_loop(alist([self._pack(msg) for msg in self.to_receive]))
 
-    async def send(self, msg: bytes):
-        await self._get_connection()
+    async def send(self, msg, wait_predicate: callable = None):
         self.sent.append(msg)
-
-    async def receive(self) -> bytes:
-        await self._get_connection()
-        if len(self.to_receive) > 0:
-            return self.to_receive.pop(0)
-        raise NoMessagesError()
+        if wait_predicate:
+            for m in self.to_receive:
+                if wait_predicate(m):
+                    return m

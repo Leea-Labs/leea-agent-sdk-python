@@ -1,95 +1,88 @@
 import asyncio
-import os
-import time
-from functools import wraps
-from os import getenv
+from os import getenv, getcwd
 
-from websockets.exceptions import ConnectionClosedError
 from websockets.asyncio.client import connect
-from websockets.protocol import State
+from websockets.exceptions import ConnectionClosed
+
+from leea_agent_sdk.protocol.protocol_pb2 import Envelope, DESCRIPTOR
+
 from google.protobuf import message as _message
-
-from leea_agent_sdk.logger import logger
-from leea_agent_sdk.protocol.protocol_pb2 import DESCRIPTOR, Envelope
-from leea_agent_sdk.web3_solana import Web3InstanceSolana
 from google.protobuf import message_factory
+from leea_agent_sdk.logger import logger
 
-
-def reconnect_if_closed(method):
-    @wraps(method)
-    def wrapper(self, *args, **kwargs):
-        try:
-            return method(self, *args, **kwargs)
-        except ConnectionClosedError:
-            logger.warn("Connection error, will reconnect")
-            self._connection = None
-            return method(self, *args, **kwargs)
-
-    return wrapper
+from leea_agent_sdk.web3_solana import Web3InstanceSolana
 
 
 class Transport:
-    _connection = None
-    _connect_callbacks = []
+    _message_subscribers = []
+    _connect_subscribers = []
+    _connected = False
+    _requests = {}
+    _socket = None
+    _requests_in_flight = {}
 
-    def __init__(self, api_key=None):
+    def __init__(self, api_key=None, wallet_path=None):
         self._connect_uri = (
-            f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:8081')}/api/v1/connect"
+            f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:1211')}/api/v1/connect"
         )
         self._api_key = api_key or getenv("LEEA_API_KEY")
         self._wallet = Web3InstanceSolana(
-            getenv("LEEA_WALLET_PATH", f"{os.getcwd()}/wallet.json")
+            wallet_path or getenv("LEEA_WALLET_PATH", f"{getcwd()}/wallet.json")
         )
         if not self._api_key:
             raise RuntimeError("Please provide LEEA_API_KEY")
 
-    def on_connect(self, callback):
-        self._connect_callbacks.append(callback)
+    def subscribe_message(self, predicate, func, one_shot=False):
+        self._message_subscribers.append((predicate, func, one_shot))
 
-    async def _get_connection(self, retry=5):
-        if self._connection is not None:
-            return self._connection
+    def on_connected(self, func):
+        self._connect_subscribers.append(func)
 
-        logger.debug(f"Connecting: {self._connect_uri}")
-        tries = retry
-        while tries > 0:
+    async def _reader_loop(self, ws):
+        async for packet in ws:
+            message = self._unpack(packet)
+            logger.debug(f"-> {message}")
+
+            for predicate, future in self._requests_in_flight.items():
+                if not future.done() and predicate(message):
+                    future.set_result(message)
+
+            for predicate, func, one_shot in self._message_subscribers[:]:
+                if predicate(message):
+                    if one_shot:
+                        self._message_subscribers.remove((predicate, func, one_shot))
+                    try:
+                        if asyncio.iscoroutinefunction(func):
+                            await func(self, message)
+                        else:
+                            func(self, message)
+                    except Exception as e:
+                        logger.exception(e)
+
+    async def run(self):
+        async for ws in connect(self._connect_uri, additional_headers={"Authorization": f"Bearer {self._api_key}"}):
             try:
-                connection = await connect(
-                    self._connect_uri,
-                    ping_interval=5,
-                    ping_timeout=1,
-                    additional_headers={"Authorization": f"Bearer {self._api_key}"},
-                )
-                if connection.state == State.OPEN:
-                    self._connection = connection
-                    break
-                else:
-                    raise OSError("Connection closed by server")
-            except OSError:
-                tries -= 1
-                time.sleep(1)
-        if self._connection is None:
-            raise ConnectionError("Cannot connect to API server")
-        for cb in self._connect_callbacks:
-            if asyncio.iscoroutinefunction(cb):
-                await cb()
-            else:
-                cb()
+                tasks = []
+                if not self._connected:
+                    logger.debug(f"Connected: {self._connect_uri}")
+                    self._connected = True
+                    self._socket = ws
+                    for func in self._connect_subscribers:
+                        tasks.append(asyncio.create_task(func(self)))
+                tasks.append(self._reader_loop(ws))
+                await asyncio.gather(*tasks)
+            except ConnectionClosed:
+                self._connected = False
+                self._socket = None
 
-        return self._connection
-
-    @reconnect_if_closed
-    async def send(self, msg: _message.Message):
+    async def send(self, msg: _message.Message, wait_predicate: callable = None):
         packed = self._pack(msg)
-        await (await self._get_connection()).send(packed)
-        logger.debug(f"-> {msg}")
-
-    @reconnect_if_closed
-    async def receive(self) -> _message.Message:
-        recv = await (await self._get_connection()).recv()
-        msg = self._unpack(recv)
+        await self._socket.send(packed)
         logger.debug(f"<- {msg}")
-        return msg
+        if wait_predicate:
+            fut = asyncio.get_event_loop().create_future()
+            self._requests_in_flight[wait_predicate] = fut
+            return await fut
 
     def get_public_key(self):
         return self._wallet.get_public_key()
@@ -108,14 +101,6 @@ class Transport:
     def _unpack(self, data: bytes) -> _message.Message:
         envelope = Envelope()
         envelope.ParseFromString(data)
-        signature_valid = self._wallet.verify_message(
-            self._wallet.get_public_key(), envelope.Payload, envelope.Signature
-        )
-        if not signature_valid:
-            logger.warning(
-                "Message signature is not valid"
-            )  # TODO raise exception when server side is implemented
-
         message_type = Envelope.MessageType.Name(envelope.Type)
         message_type = DESCRIPTOR.message_types_by_name[message_type]
         message = message_factory.GetMessageClass(message_type)()
