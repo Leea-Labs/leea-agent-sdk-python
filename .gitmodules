@@ -1,6 +1,7 @@
 [submodule "protocol"]
 	path = protocol
-	url = https://github.com/Leea-Labs/leea-agent-protocol
+	url = git@github.com:Leea-Labs/leea-agent-protocol
+
 [submodule "contracts"]
 	path = contracts
-	url = https://github.com/Leea-Labs/leea-contracts.git
+	url = git@github.com:Leea-Labs/leea-contracts.git
