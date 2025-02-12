@@ -2,5 +2,5 @@ pydantic==2.9.2
 websockets==13.1
 protobuf==5.29.3
 web3==7.7.0
-eth-utils
-eth-account
+eth-utils==5.2.0
+eth-account==0.13.4
