@@ -1,11 +1,8 @@
-import os.path
-
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from web3 import Web3
 from web3.middleware import SignAndSendRawMiddlewareBuilder
 import json
-from os import urandom
 from leea_agent_sdk.logger import logger
 from eth_account.messages import encode_defunct
 from eth_utils import keccak
@@ -15,7 +12,7 @@ class Web3InstanceEVM:
     account: LocalAccount
     w3: Web3
 
-    def __init__(self, keystore_path: str, keystore_password: str):
+    def __init__(self, keystore_path: str):
         self.path = keystore_path
         self.password = keystore_password
 
@@ -31,8 +28,7 @@ class Web3InstanceEVM:
             return
 
         with open(self.path) as keyfile:
-            encrypted_file = json.load(keyfile)
-            private_key = Account.decrypt(encrypted_file, self.password)
+            private_key = Account.decrypt(json.load(keyfile), "12345678")
             self.account: LocalAccount = Account.from_key(private_key)
             logger.info(f"Using existing account: {self.account.address}")
     
@@ -42,14 +38,14 @@ class Web3InstanceEVM:
     def connected(self):
         return self.w3.is_connected()
 
-    def sign_message(self, msg: str) -> str:
-        signed_msg = self.account.sign_message(encode_defunct(keccak(text=msg)))
-        return signed_msg.signature.to_0x_hex()
+    def sign_message(self, msg: bytes) -> (str, bytes):
+        signed_msg = self.account.sign_message(encode_defunct(keccak(primitive=msg)))
+        return self.account.address, signed_msg.signature.to_0x_hex()
 
-    def verify_message(self, msg: str, signature: str) -> bool:
+    def verify_message(self, msg: bytes, signature: str) -> bool:
         try:
             Account.recover_message(
-                encode_defunct(keccak(text=msg)), signature=signature
+                encode_defunct(keccak(primitive=msg)), signature=signature
             )
             return True
         except Exception as e:
@@ -101,3 +97,6 @@ class Web3InstanceEVM:
                 address=contract_address, abi=abi
             )
             return contract_instance
+
+    def get_public_key(self):
+        return self.account.address
