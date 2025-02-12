@@ -29,7 +29,6 @@ class Web3Instance:
             with open(self.path, "w") as f:
                 f.write(json.dumps(encrypted))
                 logger.info(f"New account was saved as file: {self.path}")
-                f.close()
             return
 
         with open(self.path) as keyfile:
@@ -37,7 +36,6 @@ class Web3Instance:
             private_key = Account.decrypt(encrypted_file, self.password)
             self.account: LocalAccount = Account.from_key(private_key)
             logger.info(f"Using existing account: {self.account.address}")
-            keyfile.close()
 
     def connected(self):
         return self.w3.is_connected()
