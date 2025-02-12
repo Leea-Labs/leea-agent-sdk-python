@@ -1,9 +1,8 @@
 import pytest
 from leea_agent_sdk.web3 import Web3Instance
-from web3 import Web3, HTTPProvider
+from web3 import Web3, EthereumTesterProvider
 
 inst = Web3Instance("leea_acc.json", "12345678")
-
 
 def test_create_wallet():
     inst.create_wallet()
@@ -16,15 +15,9 @@ def test_sign_verify():
     ver: bool = inst.verify_message("Hello World", sig)
     assert ver is True
 
-
-def test_connect():
-    connected: bool = inst.connect("http://127.0.0.1:8545")
-    assert connected is True
-
-
 @pytest.fixture
 def tester_provider():
-    return HTTPProvider("http://127.0.0.1:8545")
+    return EthereumTesterProvider()
 
 
 @pytest.fixture
@@ -57,7 +50,8 @@ def agent_registry_contract_address(w3) -> str:
 
 
 def test_register_agent_local(agent_registry_contract_address, w3):
-    connected: bool = inst.connect("http://127.0.0.1:8545")
+    inst.set_web3_provider(w3)
+    connected: bool = inst.connected()
     assert connected is True
     fee = 100
     name = "GPT"
