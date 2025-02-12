@@ -36,7 +36,11 @@ class ThreadedRuntime:
         self._transport.subscribe_message(lambda msg: isinstance(msg, ExecutionRequest), self._on_request)
 
         self.agent.set_transport(self._transport)
-        await self._transport.run()
+
+        try:
+            await self._transport.run()
+        finally:
+            await self.agent.stop()
 
     def _aio_run(self, func, *args):
         asyncio.run(func(*args))

@@ -33,7 +33,7 @@ class RemoteAgent(BaseModel):
             ParentID=context.request_id,
             RequestID=request_id,
             Input=json.dumps(data),
-            AgentID=self.id
+            AgentID=self.id,
         )
         result = await self._transport.send(request, lambda msg: isinstance(msg, ExecutionResult) and msg.RequestID == request_id)
         if isinstance(result, ExecutionResult):
@@ -79,6 +79,10 @@ class Agent(BaseModel, ABC):
 
     async def ready(self):
         """This method is called when agent is ready to handle execution requests"""
+
+    async def stop(self):
+        if self.__api is not None:
+            await self.__api.close_session()
 
     async def push_log(self, context: ExecutionContext, message: str):
         await self._transport.send(ExecutionLog(RequestID=context.request_id, Message=message))

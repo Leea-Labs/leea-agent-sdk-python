@@ -1,5 +1,5 @@
-import os
 import ssl
+from os import getenv
 
 import aiohttp
 import certifi
@@ -7,8 +7,8 @@ import certifi
 
 class LeeaApi:
     def __init__(self, api_key=None):
-        self._api_host = os.getenv("LEEA_API_HOST", "https://api.leealabs.com")
-        self._api_key = api_key or os.getenv("LEEA_API_KEY")
+        self._api_host = getenv("LEEA_API_HOST", "https://api.leealabs.com")
+        self._api_key = api_key or getenv("LEEA_API_KEY")
         if not self._api_key:
             raise RuntimeError("Please provide LEEA_API_KEY")
 
@@ -34,5 +34,5 @@ class LeeaApi:
     async def get_agent(self, alias):
         return await self._request(f"agent/{alias}")
 
-    async def close(self):
+    async def close_session(self):
         await self._client.close()
