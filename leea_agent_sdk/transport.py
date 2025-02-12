@@ -11,7 +11,7 @@ from google.protobuf import message as _message
 
 from leea_agent_sdk.logger import logger
 from leea_agent_sdk.protocol.protocol_pb2 import DESCRIPTOR, Envelope
-from leea_agent_sdk.web3 import Web3Instance
+from leea_agent_sdk.web3_solana import Web3InstanceSolana
 from google.protobuf import message_factory
 
 
@@ -33,9 +33,13 @@ class Transport:
     _connect_callbacks = []
 
     def __init__(self, api_key=None):
-        self._connect_uri = f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:8081')}/api/v1/connect"
+        self._connect_uri = (
+            f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:8081')}/api/v1/connect"
+        )
         self._api_key = api_key or getenv("LEEA_API_KEY")
-        self._wallet = Web3Instance(getenv('LEEA_WALLET_PATH', f"{os.getcwd()}/wallet.json"))
+        self._wallet = Web3InstanceSolana(
+            getenv("LEEA_WALLET_PATH", f"{os.getcwd()}/wallet.json")
+        )
         if not self._api_key:
             raise RuntimeError("Please provide LEEA_API_KEY")
 
@@ -54,9 +58,7 @@ class Transport:
                     self._connect_uri,
                     ping_interval=5,
                     ping_timeout=1,
-                    additional_headers={
-                        'Authorization': f"Bearer {self._api_key}"
-                    }
+                    additional_headers={"Authorization": f"Bearer {self._api_key}"},
                 )
                 if connection.state == State.OPEN:
                     self._connection = connection
@@ -94,21 +96,25 @@ class Transport:
 
     def _pack(self, message: _message.Message) -> bytes:
         payload = message.SerializeToString()
-        public_key, signature = self._wallet.sign_message(payload)
+        signature = self._wallet.sign_message(payload)
         envelope = Envelope(
             Type=Envelope.MessageType.Value(message.DESCRIPTOR.name),
             Payload=payload,
-            PublicKey=public_key,
-            Signature=signature
+            PublicKey=self._wallet.get_public_key(),
+            Signature=signature,
         )
         return envelope.SerializeToString()
 
     def _unpack(self, data: bytes) -> _message.Message:
         envelope = Envelope()
         envelope.ParseFromString(data)
-        signature_valid = self._wallet.verify_message(envelope.Payload, envelope.Signature)
+        signature_valid = self._wallet.verify_message(
+            self._wallet.get_public_key(), envelope.Payload, envelope.Signature
+        )
         if not signature_valid:
-            logger.warning("Message signature is not valid") # TODO raise exception when server side is implemented
+            logger.warning(
+                "Message signature is not valid"
+            )  # TODO raise exception when server side is implemented
 
         message_type = Envelope.MessageType.Name(envelope.Type)
         message_type = DESCRIPTOR.message_types_by_name[message_type]
