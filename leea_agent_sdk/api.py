@@ -6,7 +6,7 @@ import urllib3
 
 class LeeaApi:
     def __init__(self, api_key=None):
-        self._api_host = getenv('LEEA_API_HOST', 'http://localhost:1209')
+        self._api_host = getenv('LEEA_API_HOST', 'https://api.leealabs.com')
         self._api_key = api_key or getenv("LEEA_API_KEY")
         if not self._api_key:
             raise RuntimeError("Please provide LEEA_API_KEY")
