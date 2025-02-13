@@ -7,6 +7,7 @@ import jsonschema
 from pydantic import BaseModel, Field
 
 from leea_agent_sdk.api import LeeaApi
+from leea_agent_sdk.context import ExecutionContext
 from leea_agent_sdk.protocol.protocol_pb2 import ExecutionLog, ExecutionRequest, ExecutionResult
 from leea_agent_sdk.transport import Transport
 
@@ -24,10 +25,12 @@ class RemoteAgent(BaseModel):
     def set_transport(self, transport: Transport):
         self._transport = transport
 
-    async def call(self, data: any):
+    async def call(self, context: ExecutionContext, data: any):
         jsonschema.validate(data, self.input_schema)
         request_id = str(uuid.uuid4())
         request = ExecutionRequest(
+            SessionID=context.session_id,
+            ParentID=context.request_id,
             RequestID=request_id,
             Input=json.dumps(data),
             AgentID=self.id
@@ -70,11 +73,11 @@ class Agent(BaseModel, ABC):
         self._transport = transport
 
     @abstractmethod
-    async def run(self, request_id: str, data: BaseModel):
+    async def run(self, context: ExecutionContext, data: BaseModel):
         """Here goes the actual implementation of the agent."""
 
     async def ready(self):
         """This method is called when agent is ready to handle execution requests"""
 
-    async def push_log(self, request_id: str, message: str):
-        await self._transport.send(ExecutionLog(RequestID=request_id, Message=message))
+    async def push_log(self, context: ExecutionContext, message: str):
+        await self._transport.send(ExecutionLog(RequestID=context.request_id, Message=message))

@@ -28,15 +28,13 @@ class Envelope(_message.Message):
     def __init__(self, Type: _Optional[_Union[Envelope.MessageType, str]] = ..., Payload: _Optional[bytes] = ...) -> None: ...
 
 class AgentHello(_message.Message):
-    __slots__ = ("Name", "Description", "InputSchema", "OutputSchema", "PublicKey", "Signature", "Visibility")
+    __slots__ = ("Name", "Description", "InputSchema", "OutputSchema", "PublicKey", "Signature", "Visibility", "DisplayName", "Avatar")
     class AgentVisibility(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = ()
         public: _ClassVar[AgentHello.AgentVisibility]
         private: _ClassVar[AgentHello.AgentVisibility]
-        hidden: _ClassVar[AgentHello.AgentVisibility]
     public: AgentHello.AgentVisibility
     private: AgentHello.AgentVisibility
-    hidden: AgentHello.AgentVisibility
     NAME_FIELD_NUMBER: _ClassVar[int]
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     INPUTSCHEMA_FIELD_NUMBER: _ClassVar[int]
@@ -44,6 +42,8 @@ class AgentHello(_message.Message):
     PUBLICKEY_FIELD_NUMBER: _ClassVar[int]
     SIGNATURE_FIELD_NUMBER: _ClassVar[int]
     VISIBILITY_FIELD_NUMBER: _ClassVar[int]
+    DISPLAYNAME_FIELD_NUMBER: _ClassVar[int]
+    AVATAR_FIELD_NUMBER: _ClassVar[int]
     Name: str
     Description: str
     InputSchema: str
@@ -51,7 +51,9 @@ class AgentHello(_message.Message):
     PublicKey: str
     Signature: str
     Visibility: AgentHello.AgentVisibility
-    def __init__(self, Name: _Optional[str] = ..., Description: _Optional[str] = ..., InputSchema: _Optional[str] = ..., OutputSchema: _Optional[str] = ..., PublicKey: _Optional[str] = ..., Signature: _Optional[str] = ..., Visibility: _Optional[_Union[AgentHello.AgentVisibility, str]] = ...) -> None: ...
+    DisplayName: str
+    Avatar: bytes
+    def __init__(self, Name: _Optional[str] = ..., Description: _Optional[str] = ..., InputSchema: _Optional[str] = ..., OutputSchema: _Optional[str] = ..., PublicKey: _Optional[str] = ..., Signature: _Optional[str] = ..., Visibility: _Optional[_Union[AgentHello.AgentVisibility, str]] = ..., DisplayName: _Optional[str] = ..., Avatar: _Optional[bytes] = ...) -> None: ...
 
 class ServerHello(_message.Message):
     __slots__ = ()
@@ -66,14 +68,18 @@ class Error(_message.Message):
     def __init__(self, RequestID: _Optional[str] = ..., Message: _Optional[str] = ...) -> None: ...
 
 class ExecutionRequest(_message.Message):
-    __slots__ = ("RequestID", "AgentID", "Input")
+    __slots__ = ("SessionID", "RequestID", "ParentID", "AgentID", "Input")
+    SESSIONID_FIELD_NUMBER: _ClassVar[int]
     REQUESTID_FIELD_NUMBER: _ClassVar[int]
+    PARENTID_FIELD_NUMBER: _ClassVar[int]
     AGENTID_FIELD_NUMBER: _ClassVar[int]
     INPUT_FIELD_NUMBER: _ClassVar[int]
+    SessionID: str
     RequestID: str
+    ParentID: str
     AgentID: str
     Input: str
-    def __init__(self, RequestID: _Optional[str] = ..., AgentID: _Optional[str] = ..., Input: _Optional[str] = ...) -> None: ...
+    def __init__(self, SessionID: _Optional[str] = ..., RequestID: _Optional[str] = ..., ParentID: _Optional[str] = ..., AgentID: _Optional[str] = ..., Input: _Optional[str] = ...) -> None: ...
 
 class ExecutionLog(_message.Message):
     __slots__ = ("RequestID", "Message")
