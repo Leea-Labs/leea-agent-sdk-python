@@ -1,10 +1,11 @@
 import json
+import re
 import uuid
 from abc import abstractmethod, ABC
 from typing import Type, Literal
 
 import jsonschema
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from leea_agent_sdk.api import LeeaApi
 from leea_agent_sdk.context import ExecutionContext
@@ -54,10 +55,15 @@ class Agent(BaseModel, ABC):
     output_schema: Type[BaseModel]
     visibility: Literal["public", "private", "hidden"] = Field(default="public")
 
-
     _transport: Transport = None
-
     __api: LeeaApi = None
+
+    @classmethod
+    @field_validator('name', mode='after')
+    def __kebab_case_validator(cls, value: str) -> str:
+        if not bool(re.match(r'^[a-z]+(?:-[a-z]+)*$', value)):
+            raise ValueError(f'{value} should be in kebab-case')
+        return value
 
     def __get_api_client(self) -> LeeaApi:
         if self.__api is None:
