@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eprotocol.proto\x12\x13leea_agent_protocol\"\xcd\x01\n\x08\x45nvelope\x12\x37\n\x04Type\x18\x01 \x01(\x0e\x32).leea_agent_protocol.Envelope.MessageType\x12\x0f\n\x07Payload\x18\x02 \x01(\x0c\"w\n\x0bMessageType\x12\x0e\n\nAgentHello\x10\x00\x12\x0f\n\x0bServerHello\x10\x01\x12\x14\n\x10\x45xecutionRequest\x10\x64\x12\x13\n\x0f\x45xecutionResult\x10\x65\x12\x10\n\x0c\x45xecutionLog\x10\x66\x12\n\n\x05\x45rror\x10\xf4\x03\"\x80\x01\n\nAgentHello\x12\x0c\n\x04Name\x18\x01 \x01(\t\x12\x13\n\x0b\x44\x65scription\x18\x02 \x01(\t\x12\x13\n\x0bInputSchema\x18\x03 \x01(\t\x12\x14\n\x0cOutputSchema\x18\x04 \x01(\t\x12\x11\n\tPublicKey\x18\x05 \x01(\t\x12\x11\n\tSignature\x18\x06 \x01(\t\"\r\n\x0bServerHello\"+\n\x05\x45rror\x12\x11\n\tRequestID\x18\x01 \x01(\t\x12\x0f\n\x07Message\x18\x02 \x01(\t\"E\n\x10\x45xecutionRequest\x12\x11\n\tRequestID\x18\x01 \x01(\t\x12\x0f\n\x07\x41gentID\x18\x02 \x01(\t\x12\r\n\x05Input\x18\x03 \x01(\t\"2\n\x0c\x45xecutionLog\x12\x11\n\tRequestID\x18\x01 \x01(\t\x12\x0f\n\x07Message\x18\x02 \x01(\t\"J\n\x0f\x45xecutionResult\x12\x11\n\tRequestID\x18\x01 \x01(\t\x12\x14\n\x0cIsSuccessful\x18\x02 \x01(\x08\x12\x0e\n\x06Result\x18\x03 \x01(\tb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eprotocol.proto\x12\x13leea_agent_protocol\"\xcd\x01\n\x08\x45nvelope\x12\x37\n\x04Type\x18\x01 \x01(\x0e\x32).leea_agent_protocol.Envelope.MessageType\x12\x0f\n\x07Payload\x18\x02 \x01(\x0c\"w\n\x0bMessageType\x12\x0e\n\nAgentHello\x10\x00\x12\x0f\n\x0bServerHello\x10\x01\x12\x14\n\x10\x45xecutionRequest\x10\x64\x12\x13\n\x0f\x45xecutionResult\x10\x65\x12\x10\n\x0c\x45xecutionLog\x10\x66\x12\n\n\x05\x45rror\x10\xf4\x03\"\xfd\x01\n\nAgentHello\x12\x0c\n\x04Name\x18\x01 \x01(\t\x12\x13\n\x0b\x44\x65scription\x18\x02 \x01(\t\x12\x13\n\x0bInputSchema\x18\x03 \x01(\t\x12\x14\n\x0cOutputSchema\x18\x04 \x01(\t\x12\x11\n\tPublicKey\x18\x05 \x01(\t\x12\x11\n\tSignature\x18\x06 \x01(\t\x12\x43\n\nVisibility\x18\x07 \x01(\x0e\x32/.leea_agent_protocol.AgentHello.AgentVisibility\"6\n\x0f\x41gentVisibility\x12\n\n\x06public\x10\x00\x12\x0b\n\x07private\x10\x01\x12\n\n\x06hidden\x10\x02\"\r\n\x0bServerHello\"+\n\x05\x45rror\x12\x11\n\tRequestID\x18\x01 \x01(\t\x12\x0f\n\x07Message\x18\x02 \x01(\t\"E\n\x10\x45xecutionRequest\x12\x11\n\tRequestID\x18\x01 \x01(\t\x12\x0f\n\x07\x41gentID\x18\x02 \x01(\t\x12\r\n\x05Input\x18\x03 \x01(\t\"2\n\x0c\x45xecutionLog\x12\x11\n\tRequestID\x18\x01 \x01(\t\x12\x0f\n\x07Message\x18\x02 \x01(\t\"J\n\x0f\x45xecutionResult\x12\x11\n\tRequestID\x18\x01 \x01(\t\x12\x14\n\x0cIsSuccessful\x18\x02 \x01(\x08\x12\x0e\n\x06Result\x18\x03 \x01(\tb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,15 +36,17 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_ENVELOPE_MESSAGETYPE']._serialized_start=126
   _globals['_ENVELOPE_MESSAGETYPE']._serialized_end=245
   _globals['_AGENTHELLO']._serialized_start=248
-  _globals['_AGENTHELLO']._serialized_end=376
+  _globals['_AGENTHELLO']._serialized_end=501
+  _globals['_AGENTHELLO_AGENTVISIBILITY']._serialized_start=447
+  _globals['_AGENTHELLO_AGENTVISIBILITY']._serialized_end=501
   _globals['_SERVERHELLO']._serialized_start=157
   _globals['_SERVERHELLO']._serialized_end=170
-  _globals['_ERROR']._serialized_start=393
-  _globals['_ERROR']._serialized_end=436
-  _globals['_EXECUTIONREQUEST']._serialized_start=438
-  _globals['_EXECUTIONREQUEST']._serialized_end=507
-  _globals['_EXECUTIONLOG']._serialized_start=509
-  _globals['_EXECUTIONLOG']._serialized_end=559
-  _globals['_EXECUTIONRESULT']._serialized_start=561
-  _globals['_EXECUTIONRESULT']._serialized_end=635
+  _globals['_ERROR']._serialized_start=518
+  _globals['_ERROR']._serialized_end=561
+  _globals['_EXECUTIONREQUEST']._serialized_start=563
+  _globals['_EXECUTIONREQUEST']._serialized_end=632
+  _globals['_EXECUTIONLOG']._serialized_start=634
+  _globals['_EXECUTIONLOG']._serialized_end=684
+  _globals['_EXECUTIONRESULT']._serialized_start=686
+  _globals['_EXECUTIONRESULT']._serialized_end=760
 # @@protoc_insertion_point(module_scope)

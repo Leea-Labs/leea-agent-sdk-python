@@ -28,20 +28,30 @@ class Envelope(_message.Message):
     def __init__(self, Type: _Optional[_Union[Envelope.MessageType, str]] = ..., Payload: _Optional[bytes] = ...) -> None: ...
 
 class AgentHello(_message.Message):
-    __slots__ = ("Name", "Description", "InputSchema", "OutputSchema", "PublicKey", "Signature")
+    __slots__ = ("Name", "Description", "InputSchema", "OutputSchema", "PublicKey", "Signature", "Visibility")
+    class AgentVisibility(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        public: _ClassVar[AgentHello.AgentVisibility]
+        private: _ClassVar[AgentHello.AgentVisibility]
+        hidden: _ClassVar[AgentHello.AgentVisibility]
+    public: AgentHello.AgentVisibility
+    private: AgentHello.AgentVisibility
+    hidden: AgentHello.AgentVisibility
     NAME_FIELD_NUMBER: _ClassVar[int]
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     INPUTSCHEMA_FIELD_NUMBER: _ClassVar[int]
     OUTPUTSCHEMA_FIELD_NUMBER: _ClassVar[int]
     PUBLICKEY_FIELD_NUMBER: _ClassVar[int]
     SIGNATURE_FIELD_NUMBER: _ClassVar[int]
+    VISIBILITY_FIELD_NUMBER: _ClassVar[int]
     Name: str
     Description: str
     InputSchema: str
     OutputSchema: str
     PublicKey: str
     Signature: str
-    def __init__(self, Name: _Optional[str] = ..., Description: _Optional[str] = ..., InputSchema: _Optional[str] = ..., OutputSchema: _Optional[str] = ..., PublicKey: _Optional[str] = ..., Signature: _Optional[str] = ...) -> None: ...
+    Visibility: AgentHello.AgentVisibility
+    def __init__(self, Name: _Optional[str] = ..., Description: _Optional[str] = ..., InputSchema: _Optional[str] = ..., OutputSchema: _Optional[str] = ..., PublicKey: _Optional[str] = ..., Signature: _Optional[str] = ..., Visibility: _Optional[_Union[AgentHello.AgentVisibility, str]] = ...) -> None: ...
 
 class ServerHello(_message.Message):
     __slots__ = ()
