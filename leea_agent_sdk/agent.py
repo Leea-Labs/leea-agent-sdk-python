@@ -5,7 +5,7 @@ from abc import abstractmethod, ABC
 from typing import Type, Literal
 
 import jsonschema
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, model_validator
 
 from leea_agent_sdk.api import LeeaApi
 from leea_agent_sdk.context import ExecutionContext
@@ -47,7 +47,7 @@ class RemoteAgent(BaseModel):
 
 class Agent(BaseModel, ABC):
     name: str
-    display_name: str
+    display_name: str = Field(default=None)
     description: str
     avatar: bytes = Field(default=None)
 
@@ -56,14 +56,17 @@ class Agent(BaseModel, ABC):
     visibility: Literal["public", "private", "hidden"] = Field(default="public")
 
     _transport: Transport = None
+
     __api: LeeaApi = None
 
-    @classmethod
-    @field_validator('name', mode='after')
-    def __kebab_case_validator(cls, value: str) -> str:
-        if not bool(re.match(r'^[a-z]+(?:-[a-z]+)*$', value)):
-            raise ValueError(f'{value} should be in kebab-case')
-        return value
+    @model_validator(mode='after')
+    def _validate(self):
+        if not bool(re.match(r'^[a-z]+(?:-[a-z]+)*$', self.name)):
+            raise ValueError(f'name should be in kebab-case')
+        if self.display_name is None or not self.display_name.strip():
+            words = self.name.split('-')
+            self.display_name = " ".join([words[0].capitalize()] + words[1:])
+        return self
 
     def __get_api_client(self) -> LeeaApi:
         if self.__api is None:
