@@ -46,11 +46,14 @@ class RemoteAgent(BaseModel):
 
 class Agent(BaseModel, ABC):
     name: str
+    display_name: str
     description: str
+    avatar: bytes = Field(default=None)
 
     input_schema: Type[BaseModel]
     output_schema: Type[BaseModel]
     visibility: Literal["public", "private", "hidden"] = Field(default="public")
+
 
     _transport: Transport = None
 
