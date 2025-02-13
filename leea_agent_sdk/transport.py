@@ -1,5 +1,4 @@
 import asyncio
-import os.path
 from os import getenv
 
 from websockets.asyncio.client import connect
@@ -11,8 +10,6 @@ from google.protobuf import message as _message
 from google.protobuf import message_factory
 from leea_agent_sdk.logger import logger
 
-from leea_agent_sdk.web3_solana import Web3InstanceSolana
-
 
 class Transport:
     _message_subscribers = []
@@ -22,17 +19,12 @@ class Transport:
     _socket = None
     _requests_in_flight = {}
 
-    def __init__(self, api_key=None, wallet_path=None):
-
+    def __init__(self, api_key=None):
         self._connect_uri = (
             f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:1211')}/agents"
         )
         print(self._connect_uri)
         self._api_key = api_key or getenv("LEEA_API_KEY")
-        wallet_path = wallet_path or getenv("LEEA_WALLET_PATH")
-        self._wallet = Web3InstanceSolana(
-            wallet_path if os.path.isabs(wallet_path) else os.path.join(os.getcwd(), wallet_path)
-        )
         if not self._api_key:
             raise RuntimeError("Please provide LEEA_API_KEY")
 
@@ -94,17 +86,11 @@ class Transport:
             self._requests_in_flight[wait_predicate] = fut
             return await fut
 
-    def get_public_key(self):
-        return self._wallet.get_public_key()
-
     def _pack(self, message: _message.Message) -> bytes:
         payload = message.SerializeToString()
-        signature = self._wallet.sign_message(payload)
         envelope = Envelope(
             Type=Envelope.MessageType.Value(message.DESCRIPTOR.name),
             Payload=payload,
-            PublicKey=self._wallet.get_public_key(),
-            Signature=signature,
         )
         return envelope.SerializeToString()
 
