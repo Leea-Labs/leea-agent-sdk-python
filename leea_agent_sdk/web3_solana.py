@@ -2,17 +2,28 @@ from solana.rpc.api import Client
 from solders.keypair import Keypair
 from solders.signature import Signature
 from solders.pubkey import Pubkey
+import subprocess
+import base58
 
 
 class Web3InstanceSolana:
-    client: Client
     keypair: Keypair
+    fee: str
 
-    def __init__(self, keypair_path: str):
+    def __init__(self, url, keypair_path: str):
         with open(keypair_path) as file:
             data = file.read()
             self.keypair = Keypair.from_json(data)
             assert self.keypair.pubkey().is_on_curve()
+        # register agent
+        priv = base58.b58encode(self.keypair.secret())
+        args = "./leea_agent_sdk/program/registry-client {} {} {}".format(
+            self.fee, priv, url
+        ).split()
+        popen = subprocess.Popen(args, stdout=subprocess.PIPE)
+        popen.wait()
+        output = popen.stdout.read()
+        print(output)
 
     def get_public_key(self) -> str:
         return self.keypair.pubkey().__str__()
@@ -24,7 +35,3 @@ class Web3InstanceSolana:
         pubkey: Pubkey = Pubkey.from_string(pub_key)
         signature: Signature = Signature.from_string(sig)
         return signature.verify(pubkey, msg)
-
-    def connect(self, url: str) -> bool:
-        self.client = Client(url)
-        return self.client.is_connected()
