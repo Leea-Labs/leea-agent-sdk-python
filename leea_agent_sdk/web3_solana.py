@@ -17,13 +17,11 @@ class Web3InstanceSolana:
             assert self.keypair.pubkey().is_on_curve()
         # register agent
         priv = base58.b58encode(self.keypair.secret())
-        args = "./leea_agent_sdk/program/registry-client {} {} {}".format(
-            self.fee, priv, url
-        ).split()
-        popen = subprocess.Popen(args, stdout=subprocess.PIPE)
-        popen.wait()
-        output = popen.stdout.read()
-        print(output)
+        subprocess.run(
+            ["./leea_agent_sdk/program/registry-client", self.fee, priv, url],
+            check=True,
+        )
+        print("Registered!")
 
     def get_public_key(self) -> str:
         return self.keypair.pubkey().__str__()
