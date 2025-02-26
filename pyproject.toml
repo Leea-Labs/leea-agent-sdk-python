@@ -5,11 +5,29 @@ build-backend = "hatchling.build"
 [project]
 name = "leea_agent_sdk"
 version = "0.0.1"
-description = ""
+description = "Leea agent SDK"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = []
 dynamic = ["dependencies"]
+license = "MIT"
+keywords = ["leea", "agents", "sdk"]
+
+[project.urls]
+Homepage = "https://github.com/Leea-Labs/leea-agent-sdk-python"
+Documentation = "https://github.com/Leea-Labs/leea-agent-sdk-python/blob/main/README.md"
+Repository = "https://github.com/Leea-Labs/leea-agent-sdk-python"
+
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "contracts",
+    "leea_agent_sdk/*.py",
+    "leea_agent_sdk/program/registry-client",
+]
+exclude = [
+    "/tests",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true

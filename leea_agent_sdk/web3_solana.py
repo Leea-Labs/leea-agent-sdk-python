@@ -1,4 +1,3 @@
-from solana.rpc.api import Client
 from solders.keypair import Keypair
 from solders.signature import Signature
 from solders.pubkey import Pubkey
@@ -16,9 +15,9 @@ class Web3InstanceSolana:
             self.keypair = Keypair.from_json(data)
             assert self.keypair.pubkey().is_on_curve()
         # register agent
-        priv = base58.b58encode(self.keypair.secret())
+        secret_key = base58.b58encode(self.keypair.secret())
         subprocess.run(
-            ["./leea_agent_sdk/program/registry-client", self.fee, priv, url],
+            ["./leea_agent_sdk/program/registry-client", self.fee, secret_key, url],
             check=True,
         )
         print("Registered!")

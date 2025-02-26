@@ -60,12 +60,14 @@ class ServerHello(_message.Message):
     def __init__(self) -> None: ...
 
 class Error(_message.Message):
-    __slots__ = ("RequestID", "Message")
+    __slots__ = ("RequestID", "Message", "ErrorCode")
     REQUESTID_FIELD_NUMBER: _ClassVar[int]
     MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    ERRORCODE_FIELD_NUMBER: _ClassVar[int]
     RequestID: str
     Message: str
-    def __init__(self, RequestID: _Optional[str] = ..., Message: _Optional[str] = ...) -> None: ...
+    ErrorCode: str
+    def __init__(self, RequestID: _Optional[str] = ..., Message: _Optional[str] = ..., ErrorCode: _Optional[str] = ...) -> None: ...
 
 class ExecutionRequest(_message.Message):
     __slots__ = ("SessionID", "RequestID", "ParentID", "AgentID", "Input")
