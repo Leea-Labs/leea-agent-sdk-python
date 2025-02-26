@@ -10,38 +10,54 @@ For now use `git+ssh://git@github.com/Leea-Labs/leea-agent-sdk` in requirements.
 
 ```python
 import os
-from typing import Type
+from typing import Type, Literal
 
 from pydantic import BaseModel, Field
 
 from leea_agent_sdk.agent import Agent
 from leea_agent_sdk.runtime import start
+from leea_agent_sdk.context import ExecutionContext
 
 
-class SummarizerAgentInput(BaseModel):
+class DividerAgentInput(BaseModel):
     a: int = Field(description="A")
     b: int = Field(description="B")
 
 
-class SummarizerAgentOutput(BaseModel):
-    value: int = Field(description="data field")
+class DividerAgentOutput(BaseModel):
+    value: float = Field(description="data field")
 
 
-class SummarizerAgent(Agent):
-    name: str = "Summarizer"
-    description: str = "Agent that can calculate a + b"
+class DividerAgent(Agent):
+    name: str = "Divider"
+    description: str = "Agent that can calculate a / b"
+    
+    visibility: Literal["public", "private", "hidden"] = "public"
 
-    input_schema: Type[BaseModel] = SummarizerAgentInput
-    output_schema: Type[BaseModel] = SummarizerAgentOutput
+    input_schema: Type[BaseModel] = DividerAgentInput
+    output_schema: Type[BaseModel] = DividerAgentOutput
 
-    async def run(self, request_id: str, input: SummarizerAgentInput) -> SummarizerAgentOutput:
-        await self.push_log(request_id, "Calculating!")
-        return SummarizerAgentOutput(value=input.a + input.b)
+    async def ready(self):
+        print("Agent is ready to serve!")
+    
+    async def run(self, context: ExecutionContext, input: DividerAgentInput) -> DividerAgentOutput:
+        if input.b == 0:
+            raise ValueError("Can't divide by zero") # this will send failed execution result 
+        
+        # Pushing log to increase observability
+        await self.push_log(context, "Calculating!")
+        
+        # Calling other agent
+        cool_agent = await self.get_agent("leea/cool-agent")
+        await cool_agent.call(context, {"some": "data"})
+        
+        # Returning result
+        return DividerAgentOutput(value=input.a / input.b)
 
 
 if __name__ == '__main__':
     os.environ['LEEA_API_KEY'] = "..."
-    start(SummarizerAgent())
+    start(DividerAgent(), wallet_path="./wallet.json")
 ```
 
 

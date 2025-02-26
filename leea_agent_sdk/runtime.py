@@ -1,25 +1,32 @@
 import asyncio
 import json
+import os
 from threading import Thread
 
 from leea_agent_sdk.agent import Agent
+from leea_agent_sdk.context import ExecutionContext
 from leea_agent_sdk.logger import logger
 from leea_agent_sdk.protocol.protocol_pb2 import AgentHello, ServerHello, ExecutionRequest, ExecutionResult
 from leea_agent_sdk.transport import Transport
+from leea_agent_sdk.web3_solana import Web3InstanceSolana
 
 
-def start(agent: Agent, transport: Transport = None):
-    asyncio.run(astart(agent, transport))
+def start(agent: Agent, transport: Transport = None, wallet_path=None):
+    asyncio.run(astart(agent, transport, wallet_path))
 
 
-async def astart(agent: Agent, transport: Transport = None):
-    await ThreadedRuntime(agent, transport).astart()
+async def astart(agent: Agent, transport: Transport = None, wallet_path=None):
+    await ThreadedRuntime(agent, transport, wallet_path).astart()
 
 
 class ThreadedRuntime:
-    def __init__(self, agent: Agent, transport: Transport = None):
+    def __init__(self, agent: Agent, transport: Transport = None, wallet_path=None):
         self.agent = agent
         self._transport = transport or Transport()
+        wallet_path = wallet_path or os.getenv("LEEA_WALLET_PATH")
+        self._wallet = Web3InstanceSolana(
+            wallet_path if os.path.isabs(wallet_path) else os.path.join(os.getcwd(), wallet_path)
+        )
 
     def start(self):
         self._aio_run(self.astart)
@@ -40,8 +47,9 @@ class ThreadedRuntime:
             input_obj = self.agent.input_schema.model_validate_json(request.Input)
             result = "{}"
             try:
+                context = ExecutionContext(session_id=request.SessionID, request_id=request.RequestID, parent_id=request.ParentID)
                 agent_task = asyncio.run_coroutine_threadsafe(
-                    self.agent.run(request.RequestID, input_obj), loop
+                    self.agent.run(context, input_obj), loop
                 )
                 output = agent_task.result()
                 success = True
@@ -63,10 +71,14 @@ class ThreadedRuntime:
         logger.info("Handshaking")
         server_hello = await self._transport.send(AgentHello(
             Name=self.agent.name,
+            DisplayName=self.agent.display_name,
+            Avatar=self.agent.avatar,
             Description=self.agent.description,
             InputSchema=json.dumps(self.agent.input_schema.model_json_schema()),
             OutputSchema=json.dumps(self.agent.output_schema.model_json_schema()),
-            PublicKey=self._transport.get_public_key()
+            Signature=self._wallet.sign_message(self.agent.name.encode()),
+            PublicKey=self._wallet.get_public_key(),
+            Visibility=AgentHello.AgentVisibility.Value(self.agent.visibility)
         ), lambda msg: isinstance(msg, ServerHello))
         assert isinstance(server_hello, ServerHello)
         logger.info("Handshake successful")

@@ -1,16 +1,14 @@
 import asyncio
-from os import getenv, getcwd
+from os import getenv
 
 from websockets.asyncio.client import connect
-from websockets.exceptions import ConnectionClosed
+from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 
 from leea_agent_sdk.protocol.protocol_pb2 import Envelope, DESCRIPTOR
 
 from google.protobuf import message as _message
 from google.protobuf import message_factory
 from leea_agent_sdk.logger import logger
-
-from leea_agent_sdk.web3_solana import Web3InstanceSolana
 
 
 class Transport:
@@ -21,14 +19,12 @@ class Transport:
     _socket = None
     _requests_in_flight = {}
 
-    def __init__(self, api_key=None, wallet_path=None):
+    def __init__(self, api_key=None):
         self._connect_uri = (
-            f"{getenv('LEEA_API_WS_HOST', 'ws://localhost:1211')}/agents"
+            f"{getenv('LEEA_API_WS_HOST', 'wss://api.leealabs.com')}/ws-agents"
         )
+        print(self._connect_uri)
         self._api_key = api_key or getenv("LEEA_API_KEY")
-        self._wallet = Web3InstanceSolana(
-            wallet_path or getenv("LEEA_WALLET_PATH")
-        )
         if not self._api_key:
             raise RuntimeError("Please provide LEEA_API_KEY")
 
@@ -71,7 +67,13 @@ class Transport:
                         tasks.append(asyncio.create_task(func(self)))
                 tasks.append(self._reader_loop(ws))
                 await asyncio.gather(*tasks)
-            except ConnectionClosed:
+            except ConnectionClosedOK:
+                return
+            except ConnectionClosedError as e:
+                if e.rcvd.reason:
+                    logger.error(e.rcvd.reason)
+                if e.rcvd.code == 1002:
+                    return
                 self._connected = False
                 self._socket = None
 
@@ -84,17 +86,11 @@ class Transport:
             self._requests_in_flight[wait_predicate] = fut
             return await fut
 
-    def get_public_key(self):
-        return self._wallet.get_public_key()
-
     def _pack(self, message: _message.Message) -> bytes:
         payload = message.SerializeToString()
-        signature = self._wallet.sign_message(payload)
         envelope = Envelope(
             Type=Envelope.MessageType.Value(message.DESCRIPTOR.name),
             Payload=payload,
-            PublicKey=self._wallet.get_public_key(),
-            Signature=signature,
         )
         return envelope.SerializeToString()
 
