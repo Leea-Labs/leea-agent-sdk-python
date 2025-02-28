@@ -1,7 +1,7 @@
 name: Publish
 on: push
 jobs:
-  build-registry:
+  build-registry-client:
     name: Build on ${{ matrix.os }} (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -11,22 +11,18 @@ jobs:
             arch: x86_64
             target: x86_64-unknown-linux-musl
             binary: registry-client-linux-x86_64
-            artifact_name: registry-client-linux-x86_64
           - os: ubuntu-latest
             arch: aarch64
             target: aarch64-unknown-linux-musl
             binary: registry-client-linux-aarch64
-            artifact_name: registry-client-linux-aarch64
           - os: macos-latest
             arch: x86_64
             target: x86_64-apple-darwin
             binary: registry-client-macos-x86_64
-            artifact_name: registry-client-macos-x86_64
           - os: macos-latest
             arch: aarch64
             target: aarch64-apple-darwin
             binary: registry-client-macos-aarch64
-            artifact_name: registry-client-macos-aarch64
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,38 +44,25 @@ jobs:
         run: cd registry-client && cargo build --target ${{ matrix.target }} --release
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
+          name: ${{ matrix.binary }}
           path: registry-client/target/${{ matrix.target }}/release/${{ matrix.binary }}
 
   build-python:
     name: Build distribution 📦
     runs-on: ubuntu-latest
-    needs: [build-registry]
+    needs: [build-registry-client]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
           persist-credentials: false
-      - name: Download artifact (registry-client-linux-x86_64)
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: registry-client-linux-x86_64
-          path: leea_agent_sdk/registry-client-linux-x86_64
-      - name: Download artifact (registry-client-linux-aarch64)
-        uses: actions/download-artifact@v4
-        with:
-          name: registry-client-linux-aarch64
-          path: leea_agent_sdk/registry-client-linux-aarch64
-      - name: Download artifact (registry-client-macos-x86_64)
-        uses: actions/download-artifact@v4
-        with:
-          name: registry-client-macos-x86_64
-          path: leea_agent_sdk/registry-client-macos-x86_64
-      - name: Download artifact (registry-client-macos-aarch64)
-        uses: actions/download-artifact@v4
-        with:
-          name: registry-client-macos-aarch64
-          path: leea_agent_sdk/registry-client-macos-aarch64
+          path: leea_agent_sdk/registry-client
+          merge-multiple: true
+      - name: List registry client binaries
+        run: ls -la leea_agent_sdk/registry-client
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
