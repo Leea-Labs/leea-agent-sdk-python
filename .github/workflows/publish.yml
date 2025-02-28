@@ -42,10 +42,12 @@ jobs:
         run: cd registry-client && cross build --target ${{ matrix.target }} --release
       - if: ${{ !(runner.os == 'Linux' && matrix.arch == 'aarch64') }}
         run: cd registry-client && cargo build --target ${{ matrix.target }} --release
+      - run: mv registry-client/target/${{ matrix.target }}/release/registry-client registry-client/target/${{ matrix.target }}/release/${{ matrix.binary }}
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.binary }}
           path: registry-client/target/${{ matrix.target }}/release/${{ matrix.binary }}
+          if-no-files-found: error
 
   build-python:
     name: Build distribution 📦
