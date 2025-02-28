@@ -1,6 +1,8 @@
 from solders.keypair import Keypair
 from solders.signature import Signature
 from solders.pubkey import Pubkey
+import platform
+import os
 import subprocess
 import base58
 
@@ -14,13 +16,18 @@ class Web3InstanceSolana:
             data = file.read()
             self.keypair = Keypair.from_json(data)
             assert self.keypair.pubkey().is_on_curve()
-        # register agent
         secret_key = base58.b58encode(self.keypair.secret())
         subprocess.run(
-            ["./leea_agent_sdk/program/registry-client", self.fee, secret_key, url],
+            [self._get_registry_client_executable(), self.fee, secret_key, url],
             check=True,
         )
         print("Registered!")
+
+    def _get_registry_client_executable(self):
+        system = ({"Darwin": "macos"}.get(platform.system(), "linux")).lower()
+        arch = {"x64": "x86_64", "arm64": "aarch64"}.get(platform.machine(), "x86_64")
+        current_dir = os.path.dirname(__file__)
+        return os.path.join(current_dir, "registry-client", f"registry-client-{system}-{arch}")
 
     def get_public_key(self) -> str:
         return self.keypair.pubkey().__str__()
