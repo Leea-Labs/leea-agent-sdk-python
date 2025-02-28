@@ -23,7 +23,7 @@ Repository = "https://github.com/Leea-Labs/leea-agent-sdk-python"
 include = [
     "contracts",
     "leea_agent_sdk/*.py",
-    "leea_agent_sdk/program/registry-client",
+    "leea_agent_sdk/registry-client/*",
 ]
 exclude = [
     "/tests",
