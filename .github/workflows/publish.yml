@@ -37,7 +37,7 @@ jobs:
           toolchain: stable
           override: true
           target: ${{ matrix.target }}
-      - run: cp contracts/solana/target/idl/* registry-client/src/idl
+      - run: cp contracts/contracts/solana/target/idl/* registry-client/src/idl
       - if: ${{ runner.os == 'Linux' && matrix.arch == 'x86_64' }}
         run: sudo apt-get update && sudo apt-get install -y musl-tools
       - if: ${{ runner.os == 'Linux' && matrix.arch == 'aarch64' }}
