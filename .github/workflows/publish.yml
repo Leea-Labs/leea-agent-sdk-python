@@ -43,7 +43,7 @@ jobs:
       - if: ${{ runner.os == 'Linux' && matrix.arch == 'aarch64' }}
         run: cargo install cross
       - if: ${{ runner.os == 'Linux' && matrix.arch == 'aarch64' }}
-        run: cross build --target ${{ matrix.target }} --release
+        run: cd registry-client && cross build --target ${{ matrix.target }} --release
       - if: ${{ !(runner.os == 'Linux' && matrix.arch == 'aarch64') }}
         run: cd registry-client && cargo build --target ${{ matrix.target }} --release
       - uses: actions/upload-artifact@v4
