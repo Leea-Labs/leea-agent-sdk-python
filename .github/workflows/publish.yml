@@ -33,20 +33,19 @@ jobs:
           toolchain: stable
           override: true
           target: ${{ matrix.target }}
-      - run: cp contracts/contracts/solana/target/idl/* registry-client/idls
       - if: ${{ runner.os == 'Linux' && matrix.arch == 'x86_64' }}
         run: sudo apt-get update && sudo apt-get install -y musl-tools
       - if: ${{ runner.os == 'Linux' && matrix.arch == 'aarch64' }}
         run: cargo install cross
       - if: ${{ runner.os == 'Linux' && matrix.arch == 'aarch64' }}
-        run: cd registry-client && cross build --target ${{ matrix.target }} --release
+        run: cd contracts/contracts/solana/client-rs/registry && cross build --target ${{ matrix.target }} --release
       - if: ${{ !(runner.os == 'Linux' && matrix.arch == 'aarch64') }}
-        run: cd registry-client && cargo build --target ${{ matrix.target }} --release
-      - run: mv registry-client/target/${{ matrix.target }}/release/registry-client registry-client/target/${{ matrix.target }}/release/${{ matrix.binary }}
+        run: cd contracts/contracts/solana/client-rs/registry && cargo build --target ${{ matrix.target }} --release
+      - run: mv contracts/contracts/solana/target/${{ matrix.target }}/release/registry-client contracts/contracts/solana/target/${{ matrix.target }}/release/${{ matrix.binary }}
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.binary }}
-          path: registry-client/target/${{ matrix.target }}/release/${{ matrix.binary }}
+          path: contracts/contracts/solana/target/${{ matrix.target }}/release/${{ matrix.binary }}
           if-no-files-found: error
 
   build-python:
@@ -81,7 +80,7 @@ jobs:
 
   publish-to-pypi:
     name: Publish
-    if: startsWith(github.ref, 'refs/tags/')
+    #if: startsWith(github.ref, 'refs/tags/')
     needs:
       - build-python
     runs-on: ubuntu-latest
