@@ -64,22 +64,22 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: registry-client-linux-x86_64
-          path: leea_agent_sdk/registry-client
+          path: leea_agent_sdk/registry-client-linux-x86_64
       - name: Download artifact (registry-client-linux-aarch64)
         uses: actions/download-artifact@v4
         with:
           name: registry-client-linux-aarch64
-          path: leea_agent_sdk/registry-client
+          path: leea_agent_sdk/registry-client-linux-aarch64
       - name: Download artifact (registry-client-macos-x86_64)
         uses: actions/download-artifact@v4
         with:
           name: registry-client-macos-x86_64
-          path: leea_agent_sdk/registry-client
+          path: leea_agent_sdk/registry-client-macos-x86_64
       - name: Download artifact (registry-client-macos-aarch64)
         uses: actions/download-artifact@v4
         with:
           name: registry-client-macos-aarch64
-          path: leea_agent_sdk/registry-client
+          path: leea_agent_sdk/registry-client-macos-aarch64
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
