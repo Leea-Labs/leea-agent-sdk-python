@@ -5,4 +5,3 @@
 [submodule "contracts"]
 	path = contracts
 	url = git@github.com:Leea-Labs/leea-contracts.git
-	branch = client-rs
