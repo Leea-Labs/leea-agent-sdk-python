@@ -62,7 +62,7 @@ class Agent(BaseModel, ABC):
     @model_validator(mode='after')
     def _validate(self):
         if not bool(re.match(r'^[a-z]+(?:-[a-z]+)*$', self.name)):
-            raise ValueError(f'name should be in kebab-case')
+            raise ValueError('Name should be in kebab-case')
         if self.display_name is None or not self.display_name.strip():
             words = self.name.split('-')
             self.display_name = " ".join([words[0].capitalize()] + words[1:])
